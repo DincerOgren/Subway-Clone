@@ -22,7 +22,7 @@ public class CarTrigger : MonoBehaviour
     private void Start()
     {
         float speed= playerRef.GetComponent<PlayerMovement>().GetSpeed();
-        spawnTimeDelay = 20 / speed;
+        spawnTimeDelay = 15 / speed;
         timeBetweenSpawns = 1 - (speed * 0.01f);
     }
     private void OnTriggerEnter(Collider other)

@@ -58,6 +58,7 @@ public class ScoreManager : MonoBehaviour
         if (highScore>tempHigh)
         {
             PlayerPrefs.SetFloat("HighScore", currentScore);
+            
         }
     }
 

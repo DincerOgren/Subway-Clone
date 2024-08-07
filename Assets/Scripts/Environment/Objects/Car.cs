@@ -10,6 +10,7 @@ public class Car : MonoBehaviour
     // Start is called before the first frame update
 
     [Header("Gold Spawn")]
+    public bool shouldSpawnGolds = true;
     [SerializeField] Transform goldSpawnLoc;
     [SerializeField] int goldSpawnAmount = 5;
     [SerializeField] GameObject coin;
@@ -18,10 +19,14 @@ public class Car : MonoBehaviour
     [SerializeField] float coinZOffset = -3f;
     private void OnEnable()
     {
-        
+
         speed = GameObject.FindWithTag("Player").transform.GetComponent<PlayerMovement>().GetSpeed();
         trainOffset = speed / 2f;
-        StartCoroutine(SpawnCoin());
+        if (shouldSpawnGolds)
+        {
+            StartCoroutine(SpawnCoin());
+
+        }
         transform.position += Vector3.forward * trainOffset;
 
     }
@@ -42,8 +47,8 @@ public class Car : MonoBehaviour
             print("PARENT POS: " + goldSpawnLoc.position);
             print("PARENT LOCALPOS: " + goldSpawnLoc.localPosition);
             coinObject.transform.position =
-                new Vector3(temp.x, goldSpawnLoc.position.y, goldSpawnLoc.position.z+ coinZOffset + i * goldSpaceBetween);
-            print("POS: " +coinObject.transform.position.z);
+                new Vector3(temp.x, goldSpawnLoc.position.y, goldSpawnLoc.position.z + coinZOffset + i * goldSpaceBetween);
+            print("POS: " + coinObject.transform.position.z);
 
             i++;
             coinObject.transform.parent = goldSpawnLoc;

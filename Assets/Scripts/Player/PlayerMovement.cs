@@ -29,6 +29,8 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask groundLayer;
     public float gravityForce = -20f;
     public float groundDamping = .9f;
+    public float coyoteTime = 0.3f;
+    float _coyoteTimeTimer = 0;
 
     [Header("Roll")]
     public KeyCode rollKey = KeyCode.S;
@@ -117,7 +119,6 @@ public class PlayerMovement : MonoBehaviour
             HandleSkate();
         }
         rotateTimer += Time.deltaTime;
-
     }
 
 
@@ -192,6 +193,8 @@ public class PlayerMovement : MonoBehaviour
 
     }
     #endregion
+
+    #region Slope Handling
     bool OnSlope()
     {
         if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, slopeRaycastDist))
@@ -212,6 +215,7 @@ public class PlayerMovement : MonoBehaviour
         return Vector3.ProjectOnPlane(moveDir, slopeHit.normal).normalized;
 
     }
+    #endregion
     private void UpdateAnimator()
     {
         _anim.SetBool("isJumping", isJumping);
@@ -219,13 +223,19 @@ public class PlayerMovement : MonoBehaviour
         _anim.SetBool("isGameStarted", GameStarter.instance.IsGameStarted());
     }
 
+
+    #region Jump & Grounded
     private void CheckGrounded()
     {
         isGrounded = Physics.Raycast(groundCheck.position, Vector3.down, raycastDistance, groundLayer);
         if (!isGrounded)
+        {
             moveDir.y += gravityForce * Time.deltaTime;
+            _coyoteTimeTimer += Time.deltaTime;
+        }
         else
         {
+            _coyoteTimeTimer = 0;
             if (OnSlope() && isGrounded)
             {
                 isJumping = false;
@@ -234,11 +244,9 @@ public class PlayerMovement : MonoBehaviour
     }
 
 
-
-
     private void CheckJump()
     {
-        if (Input.GetKeyDown(jumpKey) && isGrounded && !isJumping)
+        if (Input.GetKeyDown(jumpKey) && (isGrounded || _coyoteTimeTimer<=coyoteTime) && !isJumping)
         {
             isJumping = true;
             StopRoll();
@@ -250,9 +258,10 @@ public class PlayerMovement : MonoBehaviour
     private void Jump()
     {
         moveDir.y = jumpForce;
-        _anim.SetTrigger("Jump");
+        _anim.SetTrigger("Jump"); 
+        _coyoteTimeTimer = coyoteTime;
     }
-
+    #endregion
     private void IncreaseSpeed()
     {
         speedTimer += Time.deltaTime;

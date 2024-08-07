@@ -23,7 +23,7 @@ public class SpawnTrigger : MonoBehaviour
             }
             else if (randomNum == 2)
             {
-                var objec = Instantiate(objectList.GetRandomGroundObject(), objectSpawnLoc.position + (Vector3.up * (1 / 2)), Quaternion.identity);
+                var objec = Instantiate(objectList.GetRandomGroundObject(), objectSpawnLoc.position + (Vector3.up /2), Quaternion.identity);
                 objec.transform.parent = spawnedObjectParent;
 
             }
@@ -35,7 +35,7 @@ public class SpawnTrigger : MonoBehaviour
 
 
 
-            var trainObcejt = Instantiate(objectList.GetRandomGroundObject(), objectSpawnLoc2.position + (Vector3.up* (1/2)), Quaternion.identity);
+            var trainObcejt = Instantiate(objectList.GetRandomGroundObject(), objectSpawnLoc2.position + (Vector3.up/2), Quaternion.identity);
             trainObcejt.transform.parent = spawnedObjectParent;
 
 

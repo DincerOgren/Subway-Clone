@@ -62,6 +62,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6853bf152efeb440a34d0861658d418, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  train: {fileID: 6838118466666207655, guid: 5f5ff989a79869b41ab7237776d59232, type: 3}
+  playerRef: {fileID: 0}
+  spawnAmount: 4
+  timeBetweenSpawns: 2
+  spawnLocations: []
+  spawnTimeDelay: 2
 --- !u!1 &3007088807282390140
 GameObject:
   m_ObjectHideFlags: 0

@@ -190,6 +190,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   trainOffset: 10
   speed: 5
+  shouldSpawnGolds: 1
   goldSpawnLoc: {fileID: 7960198130201467311}
   goldSpawnAmount: 7
   coin: {fileID: 1780381031053827396, guid: 83c3283c1e688cd41b5aa6cc8279c90e, type: 3}

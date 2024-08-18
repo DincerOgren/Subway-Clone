@@ -5,15 +5,18 @@ using UnityEngine;
 
 public class ScoreManager : MonoBehaviour
 {
-   public static ScoreManager instance;
+    public static ScoreManager instance;
 
 
-    public float currentScore=0;
-    public float highScore=0;
+    public float currentScore = 0;
+    public float highScore = 0;
     public float scoreAddedPerTick = 2;
     public float scoreTickRate = .1f;
     public float scoreTimer = 0;
-    public float scoreMultiplier=1f;
+
+    [Header("Power Up")]
+    [SerializeField] float scoreMultiplier = 5f;
+    PowerUp scoreMultiplierData;
 
 
     Health playerRef;
@@ -29,8 +32,11 @@ public class ScoreManager : MonoBehaviour
         else
             Destroy(gameObject);
 
-        highScore=PlayerPrefs.GetFloat("HighScore", currentScore);
+        scoreMultiplierData = PowerUpManager.instance.GetPowerUpData(PowerUpType.ScoreMultiplier);
+        highScore = PlayerPrefs.GetFloat("HighScore", currentScore);
 
+
+        DontDestroyOnLoad(gameObject);
     }
 
     private void Update()
@@ -38,13 +44,22 @@ public class ScoreManager : MonoBehaviour
         if (!GameStarter.instance.IsGameStarted()) return;
         if (playerRef.IsPlayerDead()) return;
 
-        if (scoreTimer>scoreTickRate)
+        if (scoreTimer > scoreTickRate)
         {
             scoreTimer = 0;
-            currentScore += scoreAddedPerTick * scoreMultiplier;
+
+            if (scoreMultiplierData.IsActive)
+            {
+                currentScore += scoreAddedPerTick * scoreMultiplier;
+            }
+            else
+            {
+                currentScore += scoreAddedPerTick;
+            }
+
         }
 
-        if (currentScore>highScore)
+        if (currentScore > highScore)
         {
             highScore = currentScore;
         }
@@ -55,10 +70,10 @@ public class ScoreManager : MonoBehaviour
     public void SaveScore()
     {
         float tempHigh = PlayerPrefs.GetFloat("HighScore");
-        if (highScore>tempHigh)
+        if (highScore > tempHigh)
         {
             PlayerPrefs.SetFloat("HighScore", currentScore);
-            
+
         }
     }
 

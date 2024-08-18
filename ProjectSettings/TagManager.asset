@@ -11,6 +11,8 @@ TagManager:
   - Coin
   - PlaneDeactivator
   - CoinParent
+  - PowerUp
+  - Magnet
   layers:
   - Default
   - TransparentFX
@@ -21,8 +23,8 @@ TagManager:
   - Ground
   - Obstacle
   - ObstacleGround
-  - 
-  - 
+  - Coin
+  - UI Camera
   - 
   - 
   - 

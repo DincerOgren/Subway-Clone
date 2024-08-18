@@ -151,6 +151,7 @@ public class Health : MonoBehaviour
 
 
         ScoreManager.instance.ResetScore();
+        PlayerCollectibleManager.instance.AddCurrentCoinsToCoins();
         PlayerCollectibleManager.instance.ResetCoins();
 
 

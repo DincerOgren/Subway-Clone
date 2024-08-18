@@ -17,7 +17,7 @@ public class UI : MonoBehaviour
         if (isUsingForButtonMethods) { return; }
         scoreText.text = ScoreManager.instance.GetScore().ToString();
         highScoreText.text = ScoreManager.instance.GetHighScore().ToString();
-        coinText.text = PlayerCollectibleManager.instance.GetGoldAmount().ToString();
+        coinText.text = PlayerCollectibleManager.instance.GetCurrentCoins().ToString();
 
     }
 

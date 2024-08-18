@@ -14,7 +14,6 @@ public class Test : MonoBehaviour
     public float jumpForce = 25f;
 
     bool isJumping = false;
-    bool isGrounded = false;
     private void Awake()
     {
         print("Awake");

@@ -41,7 +41,7 @@ public class GameStarter : MonoBehaviour
 
     private void Update()
     {
-        if (Input.anyKeyDown && !isGameStarted)
+        if (Input.GetKeyDown(KeyCode.Space) && !isGameStarted)
         {
             StartGame();
         }

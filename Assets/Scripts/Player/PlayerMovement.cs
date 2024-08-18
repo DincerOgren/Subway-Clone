@@ -65,7 +65,9 @@ public class PlayerMovement : MonoBehaviour
     public GameObject skate;
 
 
-
+    [Header("PowerUp Variables")]
+    [SerializeField] float _powerBootsJumpMultiplier = 2f;
+    [SerializeField] bool _isSkating;
 
     Vector3 moveDir;
 
@@ -221,6 +223,8 @@ public class PlayerMovement : MonoBehaviour
         _anim.SetBool("isJumping", isJumping);
         _anim.SetBool("isGrounded", isGrounded);
         _anim.SetBool("isGameStarted", GameStarter.instance.IsGameStarted());
+        _anim.SetBool("isSkateboarding", _isSkating);
+
     }
 
 
@@ -257,7 +261,12 @@ public class PlayerMovement : MonoBehaviour
 
     private void Jump()
     {
-        moveDir.y = jumpForce;
+        if (PowerUpManager.instance.GetPowerUpData(PowerUpType.PowerBoots).IsActive)
+        {
+            moveDir.y = jumpForce * _powerBootsJumpMultiplier;
+        }
+        else
+            moveDir.y = jumpForce;
         _anim.SetTrigger("Jump"); 
         _coyoteTimeTimer = coyoteTime;
     }
@@ -538,8 +547,12 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleSkate()
     {
-        if (Input.GetKeyDown(KeyCode.F))
+        if (Input.GetKeyDown(KeyCode.F) && !_isSkating)
         {
+            if(!PlayerCollectibleManager.instance.CheckSkate())
+            {
+                return;
+            }
             //isSkate
             skateTimer = 0;
 
@@ -553,7 +566,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 playerModel.localPosition = Vector3.zero;
                 skate.SetActive(false);
-                _anim.SetBool("isSkateboarding", false);
+                _isSkating = false;
             }
             
         }
@@ -562,7 +575,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void StartSkate()
     {
-        _anim.SetBool("isSkateboarding", true);
+        PlayerCollectibleManager.instance.UseSkate();
+        _isSkating = true;
         playerModel.localPosition = skatingModelOffset;
         skate.SetActive(true);
 

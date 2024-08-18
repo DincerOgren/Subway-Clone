@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1793836309500782002}
   - component: {fileID: 1752764151314637809}
   - component: {fileID: 7271911300392826559}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Coin
   m_TagString: Coin
   m_Icon: {fileID: 0}
@@ -98,6 +98,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotateSpeed: 120
+  scorePointsPerCoin: 20
+  _moveSpeedToMagnet: 18
+  shouldMoveToMagnet: 0
 --- !u!135 &7271911300392826559
 SphereCollider:
   m_ObjectHideFlags: 0

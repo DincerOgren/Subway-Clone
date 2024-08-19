@@ -17,6 +17,8 @@ public class GameStarter : MonoBehaviour
     [SerializeField] GameObject startCanvas;
     [SerializeField] GameObject endGameCanvas;
 
+    public bool shouldStartGame;
+
     [SerializeField] TextMeshProUGUI highScore;
 
     bool isGameStarted = false;
@@ -41,7 +43,7 @@ public class GameStarter : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && !isGameStarted)
+        if (shouldStartGame && !isGameStarted)
         {
             StartGame();
         }

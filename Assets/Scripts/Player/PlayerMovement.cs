@@ -31,6 +31,7 @@ public class PlayerMovement : MonoBehaviour
     public float groundDamping = .9f;
     public float coyoteTime = 0.3f;
     float _coyoteTimeTimer = 0;
+    private bool jumpQueued = false;
 
     [Header("Roll")]
     public KeyCode rollKey = KeyCode.S;
@@ -64,10 +65,16 @@ public class PlayerMovement : MonoBehaviour
 
 
     [Header("SkateBoard")]
+    public PowerUp skateData;
     public float totalSkateTime = 10f;
     public float skateTimer = 0;
     public Vector3 skatingModelOffset;
     public GameObject skate;
+    public float doubleTapThreshold = 0.3f;
+    bool _shouldUseSkate;
+    private float lastTapTime = 0f;
+    private int tapCount = 0;
+
 
 
     [Header("PowerUp Variables")]
@@ -105,6 +112,7 @@ public class PlayerMovement : MonoBehaviour
         _playerPrevLineState = _playerLineState;
         originalCenter = _collider.center;
         originalHeight = _collider.height;
+        skateData.Duration = totalSkateTime;
 
         rollCoroutine = StartCoroutine(RollSequence());
         StopRoll();
@@ -117,6 +125,7 @@ public class PlayerMovement : MonoBehaviour
             HandleTouchInput();
             IncreaseSpeed();
             //CheckJump();
+            CheckQueedJump();
             CheckRoll();
             CheckSlopeDir();
             CheckGrounded();
@@ -126,6 +135,8 @@ public class PlayerMovement : MonoBehaviour
             HandleSkate();
         }
         rotateTimer += Time.deltaTime;
+
+
     }
 
 
@@ -264,6 +275,18 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
+    void CheckQueedJump()
+    {
+        if (isGrounded && jumpQueued && !isJumping)
+        {
+            Debug.Log("Executing queued jump.");
+            isJumping = true;
+            StopRoll();
+            Jump();
+            jumpQueued = false; // Reset the queued jump after executing it
+        }
+    }
+
     private void Jump()
     {
         if (PowerUpManager.instance.GetPowerUpData(PowerUpType.PowerBoots).IsActive)
@@ -274,6 +297,8 @@ public class PlayerMovement : MonoBehaviour
             moveDir.y = jumpForce;
         _anim.SetTrigger("Jump");
         _coyoteTimeTimer = coyoteTime;
+
+        jumpQueued = false;
     }
     #endregion
     private void IncreaseSpeed()
@@ -497,6 +522,7 @@ public class PlayerMovement : MonoBehaviour
     }
     private void HandleTouchInput()
     {
+
         if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
@@ -517,133 +543,152 @@ public class PlayerMovement : MonoBehaviour
                     break;
             }
         }
+
+        DetectDoubleTap();
+
     }
 
-    private void DetectSwipe()
-    {
-        float swipeDistanceX = Mathf.Abs(endTouchPosition.x - startTouchPosition.x);
-        float swipeDistanceY = Mathf.Abs(endTouchPosition.y - startTouchPosition.y);
-
-        if (swipeDistanceX > swipeThreshold && swipeDistanceX > swipeDistanceY)
+        private void DetectSwipe()
         {
-            if (endTouchPosition.x < startTouchPosition.x)
+            float swipeDistanceX = Mathf.Abs(endTouchPosition.x - startTouchPosition.x);
+            float swipeDistanceY = Mathf.Abs(endTouchPosition.y - startTouchPosition.y);
+
+            if (swipeDistanceX > swipeThreshold && swipeDistanceX > swipeDistanceY)
             {
-                //turn left
-                //Turn Left on middle line
-                if (_playerLineState == PlayerLineState.middleLine)
+                if (endTouchPosition.x < startTouchPosition.x)
                 {
-                    _lineStartPos = transform.position;
-
-                    _lineEndPos = new Vector3(leftLine.position.x, transform.position.y, transform.position.z);
-
-
-                    _playerPrevLineState = PlayerLineState.middleLine;
-                    _playerLineState = PlayerLineState.leftLine;
-                    //anim play
-
-                    StopRoll();
-                    HandleCharacterTurns(false);
-                    // _anim.SetTrigger("TurnLeft");
-
-                    if (isTurning)
+                    //turn left
+                    //Turn Left on middle line
+                    if (_playerLineState == PlayerLineState.middleLine)
                     {
-                        rotateTimer = 0;
+                        _lineStartPos = transform.position;
+
+                        _lineEndPos = new Vector3(leftLine.position.x, transform.position.y, transform.position.z);
+
+
+                        _playerPrevLineState = PlayerLineState.middleLine;
+                        _playerLineState = PlayerLineState.leftLine;
+                        //anim play
+
+                        StopRoll();
+                        HandleCharacterTurns(false);
+                        // _anim.SetTrigger("TurnLeft");
+
+                        if (isTurning)
+                        {
+                            rotateTimer = 0;
+                        }
+                    }
+                    //Turn left on right line
+                    else if (_playerLineState == PlayerLineState.rightLine)
+                    {
+
+
+                        _lineStartPos = transform.position;
+                        _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
+
+
+                        _playerPrevLineState = PlayerLineState.rightLine;
+                        _playerLineState = PlayerLineState.middleLine;
+                        //anim play
+                        StopRoll();
+
+                        HandleCharacterTurns(false);
+                        //_anim.SetTrigger("TurnLeft");
+
+                        if (isTurning)
+                        {
+                            rotateTimer = 0;
+                        }
+
                     }
                 }
-                //Turn left on right line
-                else if (_playerLineState == PlayerLineState.rightLine)
+                else if (endTouchPosition.x > startTouchPosition.x)
                 {
-
-
-                    _lineStartPos = transform.position;
-                    _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
-
-
-                    _playerPrevLineState = PlayerLineState.rightLine;
-                    _playerLineState = PlayerLineState.middleLine;
-                    //anim play
-                    StopRoll();
-
-                    HandleCharacterTurns(false);
-                    //_anim.SetTrigger("TurnLeft");
-
-                    if (isTurning)
+                    //Turn Right on middle line
+                    if (_playerLineState == PlayerLineState.middleLine)
                     {
-                        rotateTimer = 0;
+
+
+                        _lineStartPos = transform.position;
+                        _lineEndPos = new Vector3(rightLine.position.x, transform.position.y, transform.position.z);
+
+
+
+                        _playerPrevLineState = PlayerLineState.middleLine;
+                        _playerLineState = PlayerLineState.rightLine;
+                        //anim play
+                        StopRoll();
+
+                        HandleCharacterTurns(true);
+                        //    _anim.SetTrigger("TurnRight");
+
+                        if (isTurning)
+                        {
+                            rotateTimer = 0;
+                        }
+
+                    }
+                    //Turn right on left line
+                    else if (_playerLineState == PlayerLineState.leftLine)
+                    {
+
+
+                        _lineStartPos = transform.position;
+                        _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
+
+
+                        _playerPrevLineState = PlayerLineState.leftLine;
+                        _playerLineState = PlayerLineState.middleLine;
+                        //anim play
+                        StopRoll();
+
+                        HandleCharacterTurns(true);
+                        //    _anim.SetTrigger("TurnRight");
+                        if (isTurning)
+                        {
+                            rotateTimer = 0;
+                        }
                     }
 
                 }
             }
-            else if (endTouchPosition.x > startTouchPosition.x)
+            else if (swipeDistanceY > swipeThreshold)
             {
-                //Turn Right on middle line
-                if (_playerLineState == PlayerLineState.middleLine )
+                if (endTouchPosition.y > startTouchPosition.y)
                 {
 
 
-                    _lineStartPos = transform.position;
-                    _lineEndPos = new Vector3(rightLine.position.x, transform.position.y, transform.position.z);
-
-
-
-                    _playerPrevLineState = PlayerLineState.middleLine;
-                    _playerLineState = PlayerLineState.rightLine;
-                    //anim play
-                    StopRoll();
-
-                    HandleCharacterTurns(true);
-                    //    _anim.SetTrigger("TurnRight");
-
-                    if (isTurning)
+                    if ((isGrounded || _coyoteTimeTimer <= coyoteTime) && !isJumping)
                     {
-                        rotateTimer = 0;
+                        isJumping = true;
+                        StopRoll();
+                        Jump();
+                    }
+                    else if (!isGrounded && !jumpQueued)
+                    {
+                        jumpQueued = true;
+                        Debug.Log("Jump queued.");
                     }
 
                 }
-                //Turn right on left line
-                else if (_playerLineState == PlayerLineState.leftLine )
+                else if (endTouchPosition.y < startTouchPosition.y)
                 {
-
-
-                    _lineStartPos = transform.position;
-                    _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
-
-
-                    _playerPrevLineState = PlayerLineState.leftLine;
-                    _playerLineState = PlayerLineState.middleLine;
-                    //anim play
-                    StopRoll();
-
-                    HandleCharacterTurns(true);
-                    //    _anim.SetTrigger("TurnRight");
-                    if (isTurning)
+                    if (!isRolling)
                     {
-                        rotateTimer = 0;
+                        isRolling = true;
+                        _anim.SetTrigger("Roll");
+                        rollCoroutine = StartCoroutine(RollSequence());
+
+                    }
+
+                    if (isRolling && !isGrounded)
+                    {
+                        _rb.AddForce(Vector3.down * rollDownForce, ForceMode.Acceleration);
                     }
                 }
-
             }
         }
-        else if (swipeDistanceY > swipeThreshold)
-        {
-            if (endTouchPosition.y > startTouchPosition.y)
-            {
-
-
-                if ((isGrounded || _coyoteTimeTimer <= coyoteTime) && !isJumping)
-                {
-                    isJumping = true;
-                    StopRoll();
-                    Jump();
-                }
-
-            }
-            else if (endTouchPosition.y < startTouchPosition.y)
-            {
-                isRolling = true; // Down swipe (roll)
-            }
-        }
-    }
     private void HandleCharacterTurns(bool isTurningRight)
     {
         if (isTurningRight)
@@ -700,7 +745,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleSkate()
     {
-        if (Input.GetKeyDown(KeyCode.F) && !_isSkating)
+        if (_shouldUseSkate && !_isSkating)
         {
             if (!PlayerCollectibleManager.instance.CheckSkate())
             {
@@ -708,7 +753,7 @@ public class PlayerMovement : MonoBehaviour
             }
             //isSkate
             skateTimer = 0;
-
+            _shouldUseSkate = false;
             StartSkate();
         }
 
@@ -724,6 +769,7 @@ public class PlayerMovement : MonoBehaviour
 
         }
         skateTimer += Time.deltaTime;
+
     }
 
     private void StartSkate()
@@ -732,7 +778,64 @@ public class PlayerMovement : MonoBehaviour
         _isSkating = true;
         playerModel.localPosition = skatingModelOffset;
         skate.SetActive(true);
+        PowerUpManager.instance.TakePowerUp(skateData);
 
+    }
+
+    private void DetectDoubleTap()
+    {
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+
+            if (touch.phase == TouchPhase.Began)
+            {
+                startTouchPosition = touch.position;
+            }
+
+            if (touch.phase == TouchPhase.Ended)
+            {
+                endTouchPosition = touch.position;
+
+                float distanceMoved = Vector2.Distance(startTouchPosition, endTouchPosition);
+
+                if (distanceMoved <= swipeThreshold)
+                {
+                    tapCount++;
+
+                    if (tapCount == 1)
+                    {
+                        lastTapTime = Time.time;
+                    }
+                    else if (tapCount == 2 && Time.time - lastTapTime <= doubleTapThreshold)
+                    {
+                        Debug.Log("Double Tap Detected");
+                        OnDoubleTap();
+
+                        // Reset tap count
+                        tapCount = 0;
+                    }
+                }
+                else
+                {
+                    // If it's a swipe, reset the tap count
+                    tapCount = 0;
+                }
+            }
+
+            // Reset if the second tap did not occur within the threshold time
+            if (Time.time - lastTapTime > doubleTapThreshold)
+            {
+                tapCount = 0;
+            }
+        }
+    }
+
+    private void OnDoubleTap()
+    {
+        Debug.Log("Double tap action triggered!");
+        if (!_isSkating)
+            _shouldUseSkate = true;
     }
 
     //private IEnumerator RotateCharacter(float angle)

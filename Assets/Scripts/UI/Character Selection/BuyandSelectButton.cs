@@ -34,8 +34,17 @@ public class BuyandSelectButton : MonoBehaviour
             print("Not enough currency");
     }
 
-    public void Select(SelectButtons v)
+    public void Select()
     {
 
+        if (Actions.onSelectButtonPressed != null)
+        {
+            Actions.onSelectButtonPressed.Invoke(selectedCharacter.modelRef.transform);
+
+        }
+        else
+        {
+            Debug.LogWarning("onSelectCharacters event is not assigned or has no listeners.");
+        }
     }
 }

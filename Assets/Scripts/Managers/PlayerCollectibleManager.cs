@@ -32,6 +32,7 @@ public class PlayerCollectibleManager : MonoBehaviour
 
 
 
+    public float GetSkateAmount() => skateAmount;
  
     public bool CheckSkate()
     {

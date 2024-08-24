@@ -16,4 +16,8 @@ public static class Actions
     public delegate void OnSelectCharacters(SelectButtons v);
     public static OnSelectCharacters onSelectCharacters;
 
+    public delegate void OnCharacterSelectButtonPress(Transform v);
+    public static OnCharacterSelectButtonPress onSelectButtonPressed;
+    public static OnCharacterSelectButtonPress onCharacterHovered;
+
 }

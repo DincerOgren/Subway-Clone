@@ -13,6 +13,7 @@ TagManager:
   - CoinParent
   - PowerUp
   - Magnet
+  - PlayerModel
   layers:
   - Default
   - TransparentFX

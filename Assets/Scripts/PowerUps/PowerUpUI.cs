@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,11 +10,13 @@ public class PowerUpUI : MonoBehaviour
     public PowerUp powerUpData;
     Slider slider;
     public Image powerUpImage;
+    public TextMeshProUGUI amountText;
 
     private void Awake()
     {
     
-        powerUpImage = GetComponentInChildren<Image>();       
+        powerUpImage = GetComponentInChildren<Image>();     
+
         slider = GetComponentInChildren<Slider>();
     }
     private void Start()

@@ -51,6 +51,7 @@ public class SelectButtons : MonoBehaviour
             Actions.onSelectCharacters.Invoke(this);
             CheckButtons();
             selectedMark.SetActive(true);
+            Actions.onCharacterHovered.Invoke(modelRef.transform);
         }
         else
         {

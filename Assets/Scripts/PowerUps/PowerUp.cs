@@ -12,8 +12,8 @@ public class PowerUp : ScriptableObject
     public Sprite Image;
 
     [Header("Equip Settings")]
-    public Transform equipPoint;
-    public GameObject equipPrefab;
+    public bool shouldEquip;
+    public bool shouldShowInUI;
 
     [Header("Level")]
     public int maxLevel = 5;
@@ -33,5 +33,6 @@ public enum PowerUpType
 {
     PowerBoots,
     ScoreMultiplier,
-    Magnet
+    Magnet,
+    Skate
 }

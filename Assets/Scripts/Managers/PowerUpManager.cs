@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class PowerUpManager : MonoBehaviour
@@ -38,7 +39,7 @@ public class PowerUpManager : MonoBehaviour
 
     public void EquipPrefab(PowerUp data)
     {
-        if (data.equipPrefab!=null)
+        if (data.shouldEquip)
         {
             //Spawn
             if (data.powerUpType == PowerUpType.PowerBoots)
@@ -69,10 +70,14 @@ public class PowerUpManager : MonoBehaviour
             var uiPrefab = Instantiate(powerUpUIPrefab, powerUpUIContainer);
 
             print(uiPrefab.name + " NAMEEE");
-
+            
             uiPrefab.powerUpData = data;
             data.IsActive = true;
-
+            if (uiPrefab.powerUpData.powerUpType== PowerUpType.Skate)
+            {
+                uiPrefab.amountText.gameObject.SetActive(true);
+                uiPrefab.amountText.text = PlayerCollectibleManager.instance.GetSkateAmount().ToString();
+            }
             data.Timer= 0;
             StartCoroutine(StartTimer(data));
         }
@@ -101,7 +106,7 @@ public class PowerUpManager : MonoBehaviour
         data.IsActive = false;
         data.Timer = Mathf.Infinity;
 
-        if (data.equipPrefab != null)
+        if (data.shouldEquip)
         {
             if (data.powerUpType == PowerUpType.PowerBoots)
             {

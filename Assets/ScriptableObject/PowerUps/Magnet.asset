@@ -14,12 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   powerUpType: 2
   Timer: Infinity
-  Duration: 36.5
+  Duration: 5
   IsActive: 0
   Image: {fileID: 21300000, guid: 80ab3211f785aa54982069b1694fa2c3, type: 3}
-  equipPoint: {fileID: 0}
-  equipPrefab: {fileID: 5907780003374544700, guid: 9cb627e8cc8a1b04a86b7bc88a955628,
-    type: 3}
+  shouldEquip: 1
+  shouldShowInUI: 0
   maxLevel: 5
   currentLevel: 2
   defUpgradeCost: 750

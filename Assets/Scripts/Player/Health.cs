@@ -30,6 +30,7 @@ public class Health : MonoBehaviour
     Material _playerMat;
     bool isDead = false;
 
+    bool isInvincible;
     [Header("Player Movement")]
     PlayerMovement playerMovement;
     float oldSpeed;
@@ -37,7 +38,10 @@ public class Health : MonoBehaviour
     [Header("Error Handler")]
     public bool isInErrorPeriod = false;
     public float errorPeriodTime = .5f;
-    private float _errorTimer = 0;
+    public float _errorTimer = 0;
+    public bool isPlayerTwisted;
+    public float twistedTime = 2f;
+    public float _twistedTimer = Mathf.Infinity;
 
 
     //[Header("Knockback")]
@@ -49,7 +53,7 @@ public class Health : MonoBehaviour
 
     private void Awake()
     {
-        playerMovement=GetComponent<PlayerMovement>();
+        playerMovement = GetComponent<PlayerMovement>();
     }
 
     private void Start()
@@ -65,91 +69,176 @@ public class Health : MonoBehaviour
 
     private void Update()
     {
-        if (Flags.isTakingDamage)
-            startClean = true;
+        //if (Flags.isTakingDamage)
+        //    startClean = true;
 
-        if (invincibleTimer > invincibleTimeAfterDamage && startClean)
-        {
-            startClean = false;
-            GetComponent<DamageCollisions>().ClearArray();
-        }
-        Flags.isTakingDamage = !(invincibleTimer > invincibleTimeAfterDamage);
+        //if (invincibleTimer > invincibleTimeAfterDamage && startClean)
+        //{
+        //    startClean = false;
+        //    GetComponent<DamageCollisions>().ClearArray();
+        //}
+        //Flags.isTakingDamage = !(invincibleTimer > invincibleTimeAfterDamage);
         UpdateTimers();
 
         CheckError();
+        CheckPlayerState();
+        CheckInvincible();
+
     }
 
-   
+
 
     private void UpdateTimers()
     {
         invincibleTimer += Time.deltaTime;
+        _twistedTimer += Time.deltaTime;
+    }
+    private void CheckPlayerState()
+    {
+        if (!isPlayerTwisted) return;
+
+        if (_twistedTimer >= twistedTime)
+        {
+            isPlayerTwisted = false;
+        }
+        print("PLAYER TWISTEDDDDDD");
+    }
+
+    private void CheckInvincible()
+    {
+        if (!isInvincible) return;
+
+        if (invincibleTimer >= invincibleTimeAfterDamage)
+        {
+            isInvincible = false;
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.collider.CompareTag("Obstacle"))
+        if (isInvincible)
         {
+            return;
+        }
+
+        if (collision.collider.CompareTag("TrainFront"))
+        {
+            // If the player hits the front, they die immediately
             if (!isInErrorPeriod)
             {
-                isInErrorPeriod = true;
-                _errorTimer = errorPeriodTime;
+                StartErrorPeriod();
             }
             else
-                TakeDamage();
+            {
+                Die();
+            }
         }
-    }
+        else if (collision.collider.CompareTag("TrainSide"))
+        {
+            // If the player hits the side, enter the twisted state
+            if (!isPlayerTwisted)
+            {
+                EnterTwistedState();
+            }
+            else
+            {
+                // If already twisted, the player dies
+                Die();
+            }
+        }
 
+    }
+    private void EnterTwistedState()
+    {
+        isPlayerTwisted = true;
+        _twistedTimer = 0;
+        // Start shaking the player
+        //StartCoroutine(ShakePlayer());
+
+        // Move the player back to the previous lane after the shake
+        //StartCoroutine(MoveToPreviousLane());
+
+        print("PLAYER TWISTEDDDDDD");
+    }
     private void CheckError()
     {
         if (!isInErrorPeriod) return;
 
         _errorTimer -= Time.deltaTime;
 
-        oldSpeed = playerMovement.GetSpeed();   
+        if (_errorTimer >= 0)
+        {
+            // Continuously check for swipe during error period
+            if (playerMovement.CheckSwipeDuringErrorPeriod())
+            {
+                RecoverFromHit();
+                return;
+            }
+        }
 
-        playerMovement.SetPlayerSpeed(0);
-
-        // Should Detect Swipe in here: : : :
-        //if ()
-        //{
-
-        //}
-
-        if (_errorTimer <= 0)
+        if (_errorTimer < 0)
         {
             EndErrorPeriod();
         }
     }
 
+    private void StartErrorPeriod()
+    {
+        isInErrorPeriod = true;
+        _errorTimer = errorPeriodTime;
+
+
+        oldSpeed = playerMovement.GetSpeed();
+        // Optionally slow down the player or provide visual feedback
+        playerMovement.SetPlayerSpeed(0); // Stop player movement during the error period
+        playerMovement.EnableSwipeDetectionDuringErrorPeriod(true); // Start detecting recovery swipes
+
+        Debug.Log("Error period started. Swipe to recover!");
+    }
     private void RecoverFromHit()
     {
         isInErrorPeriod = false;
-        _errorTimer= 0f;
+        _errorTimer = 0f;
 
         Debug.Log("Player recovered from hit!");
+        playerMovement.EnableSwipeDetectionDuringErrorPeriod(false); // Disable error period swipe detection
+        playerMovement.SetPlayerSpeed(oldSpeed); // Restore player speed
+        oldSpeed = 0f;
+        isPlayerTwisted = true;
+        EnterInvincibleState();
     }
+
+    private void EnterInvincibleState()
+    {
+        invincibleTimer = 0;
+        isInvincible = true;
+    }
+
     private void EndErrorPeriod()
     {
         isInErrorPeriod = false;
         Debug.Log("End Of Error Period");
-        playerMovement.SetPlayerSpeed(oldSpeed);
+        playerMovement.EnableSwipeDetectionDuringErrorPeriod(false); // Disable error period swipe detection
+        playerMovement.SetPlayerSpeed(oldSpeed); // Restore player speed
+        oldSpeed = 0f;
+        Die();
     }
 
     private void TakeDamage()
     {
-        startClean = true;
-        _currentHealth--;
-        invincibleTimer = 0;
-        //StartCoroutine(KnockBack());
-        //Knockback
-        UpdateUI();
-        if (_currentHealth < 1)
-        {
-            Die();
-            return;
-        }
-        StartCoroutine(DamageFlash());
+        //startClean = true;
+        //_currentHealth--;
+        //invincibleTimer = 0;
+        ////StartCoroutine(KnockBack());
+        ////Knockback
+        //UpdateUI();
+        //if (_currentHealth < 1)
+        //{
+        //    Die();
+        //    return;
+        //}
+        //StartCoroutine(DamageFlash());
+
     }
 
     //IEnumerator KnockBack()

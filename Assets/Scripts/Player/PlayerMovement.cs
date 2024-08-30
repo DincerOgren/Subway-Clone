@@ -98,6 +98,9 @@ public class PlayerMovement : MonoBehaviour
     PlayerLineState _playerLineState;
     PlayerLineState _playerPrevLineState;
 
+    [Header("Error Period")]
+    bool detectSwipeForErrorPeriod;
+
     #region Monobehaviour Methods
     private void Awake()
     {
@@ -318,6 +321,94 @@ public class PlayerMovement : MonoBehaviour
 
 
     }
+    #region Error Swipe Detection
+
+    public void EnableSwipeDetectionDuringErrorPeriod(bool enable)
+    {
+        detectSwipeForErrorPeriod = enable;
+    }
+
+    public bool CheckSwipeDuringErrorPeriod()
+    {
+        if (!detectSwipeForErrorPeriod) return false;
+
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+
+            switch (touch.phase)
+            {
+                case TouchPhase.Began:
+                    startTouchPosition = touch.position;
+                    break;
+
+                case TouchPhase.Moved:
+                    endTouchPosition = touch.position;
+                    break;
+
+                case TouchPhase.Ended:
+                    endTouchPosition = touch.position;
+
+                    if (DetectSwipeInErrorPeriod()) // Check if the swipe is valid for recovery
+                    {
+                        return true; // Valid swipe detected, player should recover
+                    }
+                    break;
+            }
+        }
+
+        return false;
+    }
+
+    private bool DetectSwipeInErrorPeriod()
+    {
+        float swipeDistanceX = Mathf.Abs(endTouchPosition.x - startTouchPosition.x);
+        float swipeDistanceY = Mathf.Abs(endTouchPosition.y - startTouchPosition.y);
+
+        if (swipeDistanceX > swipeThreshold && swipeDistanceX > swipeDistanceY)
+        {
+            if (endTouchPosition.x < startTouchPosition.x)
+            {
+                // Swipe Left
+                return CanSwipeLeft();
+            }
+            else if (endTouchPosition.x > startTouchPosition.x)
+            {
+                // Swipe Right
+                return CanSwipeRight();
+            }
+        }
+        
+
+        return false; // No valid swipe detected
+    }
+
+    private bool CanSwipeLeft()
+    {
+        // If the player is in the leftmost lane, they can't swipe left
+        if (_playerLineState == PlayerLineState.leftLine)
+        {
+            return false; // Invalid swipe
+        }
+
+        // Otherwise, they can swipe left
+        return true;
+    }
+
+    private bool CanSwipeRight()
+    {
+        // If the player is in the rightmost lane, they can't swipe right
+        if (_playerLineState == PlayerLineState.rightLine)
+        {
+            return false; // Invalid swipe
+        }
+
+        // Otherwise, they can swipe right
+        return true;
+    }
+
+
+    #endregion
 
     void ChangeLine()
     {

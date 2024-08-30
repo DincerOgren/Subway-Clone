@@ -59,6 +59,7 @@ public class PlayerCollectibleManager : MonoBehaviour
     public void AddToCurrentCoin(float v = 1)
     {
         currentCoinAmount += v;
+        Actions.OnCoinTakeInGame?.Invoke();
     }
     public void AddCurrentCoinsToCoins()
     {

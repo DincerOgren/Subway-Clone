@@ -20,4 +20,7 @@ public static class Actions
     public static OnCharacterSelectButtonPress onSelectButtonPressed;
     public static OnCharacterSelectButtonPress onCharacterHovered;
 
+    public static Action OnCoinTakeInGame;
+    
+
 }

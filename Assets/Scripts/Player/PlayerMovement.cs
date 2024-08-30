@@ -548,147 +548,146 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
-        private void DetectSwipe()
+    private void DetectSwipe()
+    {
+        float swipeDistanceX = Mathf.Abs(endTouchPosition.x - startTouchPosition.x);
+        float swipeDistanceY = Mathf.Abs(endTouchPosition.y - startTouchPosition.y);
+
+        if (swipeDistanceX > swipeThreshold && swipeDistanceX > swipeDistanceY)
         {
-            float swipeDistanceX = Mathf.Abs(endTouchPosition.x - startTouchPosition.x);
-            float swipeDistanceY = Mathf.Abs(endTouchPosition.y - startTouchPosition.y);
-
-            if (swipeDistanceX > swipeThreshold && swipeDistanceX > swipeDistanceY)
+            if (endTouchPosition.x < startTouchPosition.x)
             {
-                if (endTouchPosition.x < startTouchPosition.x)
+                //turn left
+                //Turn Left on middle line
+                if (_playerLineState == PlayerLineState.middleLine)
                 {
-                    //turn left
-                    //Turn Left on middle line
-                    if (_playerLineState == PlayerLineState.middleLine)
+                    _lineStartPos = transform.position;
+
+                    _lineEndPos = new Vector3(leftLine.position.x, transform.position.y, transform.position.z);
+
+
+                    _playerPrevLineState = PlayerLineState.middleLine;
+                    _playerLineState = PlayerLineState.leftLine;
+                    //anim play
+
+                    StopRoll();
+                    HandleCharacterTurns(false);
+                    // _anim.SetTrigger("TurnLeft");
+
+                    if (isTurning)
                     {
-                        _lineStartPos = transform.position;
-
-                        _lineEndPos = new Vector3(leftLine.position.x, transform.position.y, transform.position.z);
-
-
-                        _playerPrevLineState = PlayerLineState.middleLine;
-                        _playerLineState = PlayerLineState.leftLine;
-                        //anim play
-
-                        StopRoll();
-                        HandleCharacterTurns(false);
-                        // _anim.SetTrigger("TurnLeft");
-
-                        if (isTurning)
-                        {
-                            rotateTimer = 0;
-                        }
-                    }
-                    //Turn left on right line
-                    else if (_playerLineState == PlayerLineState.rightLine)
-                    {
-
-
-                        _lineStartPos = transform.position;
-                        _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
-
-
-                        _playerPrevLineState = PlayerLineState.rightLine;
-                        _playerLineState = PlayerLineState.middleLine;
-                        //anim play
-                        StopRoll();
-
-                        HandleCharacterTurns(false);
-                        //_anim.SetTrigger("TurnLeft");
-
-                        if (isTurning)
-                        {
-                            rotateTimer = 0;
-                        }
-
+                        rotateTimer = 0;
                     }
                 }
-                else if (endTouchPosition.x > startTouchPosition.x)
+                //Turn left on right line
+                else if (_playerLineState == PlayerLineState.rightLine)
                 {
-                    //Turn Right on middle line
-                    if (_playerLineState == PlayerLineState.middleLine)
+
+
+                    _lineStartPos = transform.position;
+                    _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
+
+
+                    _playerPrevLineState = PlayerLineState.rightLine;
+                    _playerLineState = PlayerLineState.middleLine;
+                    //anim play
+                    StopRoll();
+
+                    HandleCharacterTurns(false);
+                    //_anim.SetTrigger("TurnLeft");
+
+                    if (isTurning)
                     {
-
-
-                        _lineStartPos = transform.position;
-                        _lineEndPos = new Vector3(rightLine.position.x, transform.position.y, transform.position.z);
-
-
-
-                        _playerPrevLineState = PlayerLineState.middleLine;
-                        _playerLineState = PlayerLineState.rightLine;
-                        //anim play
-                        StopRoll();
-
-                        HandleCharacterTurns(true);
-                        //    _anim.SetTrigger("TurnRight");
-
-                        if (isTurning)
-                        {
-                            rotateTimer = 0;
-                        }
-
-                    }
-                    //Turn right on left line
-                    else if (_playerLineState == PlayerLineState.leftLine)
-                    {
-
-
-                        _lineStartPos = transform.position;
-                        _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
-
-
-                        _playerPrevLineState = PlayerLineState.leftLine;
-                        _playerLineState = PlayerLineState.middleLine;
-                        //anim play
-                        StopRoll();
-
-                        HandleCharacterTurns(true);
-                        //    _anim.SetTrigger("TurnRight");
-                        if (isTurning)
-                        {
-                            rotateTimer = 0;
-                        }
+                        rotateTimer = 0;
                     }
 
                 }
             }
-            else if (swipeDistanceY > swipeThreshold)
+            else if (endTouchPosition.x > startTouchPosition.x)
             {
-                if (endTouchPosition.y > startTouchPosition.y)
+                //Turn Right on middle line
+                if (_playerLineState == PlayerLineState.middleLine)
                 {
 
 
-                    if ((isGrounded || _coyoteTimeTimer <= coyoteTime) && !isJumping)
+                    _lineStartPos = transform.position;
+                    _lineEndPos = new Vector3(rightLine.position.x, transform.position.y, transform.position.z);
+
+
+
+                    _playerPrevLineState = PlayerLineState.middleLine;
+                    _playerLineState = PlayerLineState.rightLine;
+                    //anim play
+                    StopRoll();
+
+                    HandleCharacterTurns(true);
+                    //    _anim.SetTrigger("TurnRight");
+
+                    if (isTurning)
                     {
-                        isJumping = true;
-                        StopRoll();
-                        Jump();
-                    }
-                    else if (!isGrounded && !jumpQueued)
-                    {
-                        jumpQueued = true;
-                        Debug.Log("Jump queued.");
+                        rotateTimer = 0;
                     }
 
                 }
-                else if (endTouchPosition.y < startTouchPosition.y)
+                //Turn right on left line
+                else if (_playerLineState == PlayerLineState.leftLine)
                 {
-                    if (!isRolling)
-                    {
-                        isRolling = true;
-                        _anim.SetTrigger("Roll");
-                        rollCoroutine = StartCoroutine(RollSequence());
 
-                    }
 
-                    if (isRolling && !isGrounded)
+                    _lineStartPos = transform.position;
+                    _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
+
+
+                    _playerPrevLineState = PlayerLineState.leftLine;
+                    _playerLineState = PlayerLineState.middleLine;
+                    //anim play
+                    StopRoll();
+
+                    HandleCharacterTurns(true);
+                    //    _anim.SetTrigger("TurnRight");
+                    if (isTurning)
                     {
-                        _rb.AddForce(Vector3.down * rollDownForce, ForceMode.Acceleration);
+                        rotateTimer = 0;
                     }
+                }
+
+            }
+        }
+        else if (swipeDistanceY > swipeThreshold)
+        {
+            if (endTouchPosition.y > startTouchPosition.y)
+            {
+
+                if ((isGrounded || _coyoteTimeTimer <= coyoteTime) && !isJumping)
+                {
+                    isJumping = true;
+                    StopRoll();
+                    Jump();
+                }
+                else if (!isGrounded && !jumpQueued)
+                {
+                    jumpQueued = true;
+                    Debug.Log("Jump queued.");
+                }
+
+            }
+            else if (endTouchPosition.y < startTouchPosition.y)
+            {
+                if (!isRolling)
+                {
+                    isRolling = true;
+                    _anim.SetTrigger("Roll");
+                    rollCoroutine = StartCoroutine(RollSequence());
+
+                }
+
+                if (isRolling && !isGrounded)
+                {
+                    _rb.AddForce(Vector3.down * rollDownForce, ForceMode.Acceleration);
                 }
             }
         }
+    }
     private void HandleCharacterTurns(bool isTurningRight)
     {
         if (isTurningRight)
@@ -903,6 +902,10 @@ public class PlayerMovement : MonoBehaviour
         return playerForwardSpeed;
     }
 
+    public void SetPlayerSpeed(float value)
+    {
+        playerForwardSpeed = value;
+    }
 
 }
 

@@ -50,7 +50,7 @@ public class Coin : MonoBehaviour
             //Maybe particle
             // Sound fx
             PlayerCollectibleManager.instance.AddToCurrentCoin();
-            ScoreManager.instance.AddScore(scorePointsPerCoin);
+            //ScoreManager.instance.AddScore(scorePointsPerCoin);
             shouldMoveToMagnet = false;
             gameObject.SetActive(false);
 

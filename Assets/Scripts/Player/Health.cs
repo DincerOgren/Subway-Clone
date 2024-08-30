@@ -15,7 +15,6 @@ public class Health : MonoBehaviour
     float _currentHealth;
 
     [Header("UI")]
-
     [SerializeField] Canvas inGameCanvas;
     [SerializeField] Canvas endGameCanvas;
     [SerializeField] TextMeshProUGUI endScore;
@@ -31,12 +30,27 @@ public class Health : MonoBehaviour
     Material _playerMat;
     bool isDead = false;
 
+    [Header("Player Movement")]
+    PlayerMovement playerMovement;
+    float oldSpeed;
+
+    [Header("Error Handler")]
+    public bool isInErrorPeriod = false;
+    public float errorPeriodTime = .5f;
+    private float _errorTimer = 0;
+
+
     //[Header("Knockback")]
     //[SerializeField] float knockBackForce = 10f;
     //[SerializeField] float knockBackSpeed = 20f;
 
 
     bool startClean;
+
+    private void Awake()
+    {
+        playerMovement=GetComponent<PlayerMovement>();
+    }
 
     private void Start()
     {
@@ -61,7 +75,11 @@ public class Health : MonoBehaviour
         }
         Flags.isTakingDamage = !(invincibleTimer > invincibleTimeAfterDamage);
         UpdateTimers();
+
+        CheckError();
     }
+
+   
 
     private void UpdateTimers()
     {
@@ -72,8 +90,50 @@ public class Health : MonoBehaviour
     {
         if (collision.collider.CompareTag("Obstacle"))
         {
-            TakeDamage();
+            if (!isInErrorPeriod)
+            {
+                isInErrorPeriod = true;
+                _errorTimer = errorPeriodTime;
+            }
+            else
+                TakeDamage();
         }
+    }
+
+    private void CheckError()
+    {
+        if (!isInErrorPeriod) return;
+
+        _errorTimer -= Time.deltaTime;
+
+        oldSpeed = playerMovement.GetSpeed();   
+
+        playerMovement.SetPlayerSpeed(0);
+
+        // Should Detect Swipe in here: : : :
+        //if ()
+        //{
+
+        //}
+
+        if (_errorTimer <= 0)
+        {
+            EndErrorPeriod();
+        }
+    }
+
+    private void RecoverFromHit()
+    {
+        isInErrorPeriod = false;
+        _errorTimer= 0f;
+
+        Debug.Log("Player recovered from hit!");
+    }
+    private void EndErrorPeriod()
+    {
+        isInErrorPeriod = false;
+        Debug.Log("End Of Error Period");
+        playerMovement.SetPlayerSpeed(oldSpeed);
     }
 
     private void TakeDamage()

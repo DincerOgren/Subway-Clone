@@ -321,6 +321,7 @@ public class PlayerMovement : MonoBehaviour
 
 
     }
+
     #region Error Swipe Detection
 
     public void EnableSwipeDetectionDuringErrorPeriod(bool enable)
@@ -360,6 +361,80 @@ public class PlayerMovement : MonoBehaviour
         return false;
     }
 
+    public void StartMovingPrevLine()
+    {
+        //StartCoroutine(ShakePlayer());
+        //StartCoroutine(MoveToPreviousLane());
+    }
+
+    private IEnumerator ShakePlayer()
+    {
+        float shakeDuration = .5f;  // Duration of the shake
+        float shakeMagnitude = 0.1f; // Magnitude of the shake
+
+        Vector3 originalPosition = playerModel.position;
+
+        float elapsedTime = 0f;
+
+        while (elapsedTime < shakeDuration)
+        {
+            float offsetX = UnityEngine.Random.Range(-1f, 1f) * shakeMagnitude;
+            playerModel.position = new Vector3(transform.position.x + offsetX, transform.position.y,transform.position.z);
+
+            elapsedTime += Time.deltaTime;
+
+            yield return null;
+        }
+
+        // After shaking, restore the original position
+        playerModel.position = originalPosition;
+    }
+    public void MoveToPreviousLane()
+    {
+        //yield return new WaitForSeconds(0.5f); // Wait for the shake to finish
+
+        //TurnLeftOnRight
+        if (_playerPrevLineState == PlayerLineState.middleLine && _playerLineState == PlayerLineState.rightLine)
+        {
+            TurnLeftOnRight();
+        }
+        //TurnLeftOnMiddle
+        else if (_playerPrevLineState == PlayerLineState.leftLine && _playerLineState == PlayerLineState.middleLine)
+        {
+            TurnLeftOnMiddle();
+        }
+        //TurnRightOnLeft
+        else if (_playerPrevLineState == PlayerLineState.middleLine && _playerLineState == PlayerLineState.leftLine)
+        {
+            TurnRightOnLeft();
+        }
+        //TurnRightOnMiddle
+        else if (_playerPrevLineState == PlayerLineState.rightLine && _playerLineState == PlayerLineState.middleLine)
+        {
+            TurnRightOnMiddle();
+        }
+        
+
+    }
+    private void eeeer()
+    {
+        _lineStartPos = transform.position;
+        _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
+
+
+        _playerPrevLineState = PlayerLineState.rightLine;
+        _playerLineState = PlayerLineState.middleLine;
+        //anim play
+        StopRoll();
+
+        HandleCharacterTurns(false);
+        //_anim.SetTrigger("TurnLeft");
+
+        if (isTurning)
+        {
+            rotateTimer = 0;
+        }
+    }
     private bool DetectSwipeInErrorPeriod()
     {
         float swipeDistanceX = Mathf.Abs(endTouchPosition.x - startTouchPosition.x);
@@ -652,45 +727,12 @@ public class PlayerMovement : MonoBehaviour
                 //Turn Left on middle line
                 if (_playerLineState == PlayerLineState.middleLine)
                 {
-                    _lineStartPos = transform.position;
-
-                    _lineEndPos = new Vector3(leftLine.position.x, transform.position.y, transform.position.z);
-
-
-                    _playerPrevLineState = PlayerLineState.middleLine;
-                    _playerLineState = PlayerLineState.leftLine;
-                    //anim play
-
-                    StopRoll();
-                    HandleCharacterTurns(false);
-                    // _anim.SetTrigger("TurnLeft");
-
-                    if (isTurning)
-                    {
-                        rotateTimer = 0;
-                    }
+                    TurnLeftOnMiddle();
                 }
                 //Turn left on right line
                 else if (_playerLineState == PlayerLineState.rightLine)
                 {
-
-
-                    _lineStartPos = transform.position;
-                    _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
-
-
-                    _playerPrevLineState = PlayerLineState.rightLine;
-                    _playerLineState = PlayerLineState.middleLine;
-                    //anim play
-                    StopRoll();
-
-                    HandleCharacterTurns(false);
-                    //_anim.SetTrigger("TurnLeft");
-
-                    if (isTurning)
-                    {
-                        rotateTimer = 0;
-                    }
+                    TurnLeftOnRight();
 
                 }
             }
@@ -699,47 +741,13 @@ public class PlayerMovement : MonoBehaviour
                 //Turn Right on middle line
                 if (_playerLineState == PlayerLineState.middleLine)
                 {
-
-
-                    _lineStartPos = transform.position;
-                    _lineEndPos = new Vector3(rightLine.position.x, transform.position.y, transform.position.z);
-
-
-
-                    _playerPrevLineState = PlayerLineState.middleLine;
-                    _playerLineState = PlayerLineState.rightLine;
-                    //anim play
-                    StopRoll();
-
-                    HandleCharacterTurns(true);
-                    //    _anim.SetTrigger("TurnRight");
-
-                    if (isTurning)
-                    {
-                        rotateTimer = 0;
-                    }
+                    TurnRightOnMiddle();
 
                 }
                 //Turn right on left line
                 else if (_playerLineState == PlayerLineState.leftLine)
                 {
-
-
-                    _lineStartPos = transform.position;
-                    _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
-
-
-                    _playerPrevLineState = PlayerLineState.leftLine;
-                    _playerLineState = PlayerLineState.middleLine;
-                    //anim play
-                    StopRoll();
-
-                    HandleCharacterTurns(true);
-                    //    _anim.SetTrigger("TurnRight");
-                    if (isTurning)
-                    {
-                        rotateTimer = 0;
-                    }
+                    TurnRightOnLeft();
                 }
 
             }
@@ -779,6 +787,93 @@ public class PlayerMovement : MonoBehaviour
             }
         }
     }
+
+    #region TurnMethods
+    private void TurnRightOnLeft()
+    {
+        _lineStartPos = transform.position;
+        _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
+
+
+        _playerPrevLineState = PlayerLineState.leftLine;
+        _playerLineState = PlayerLineState.middleLine;
+        //anim play
+        StopRoll();
+
+        HandleCharacterTurns(true);
+        //    _anim.SetTrigger("TurnRight");
+        if (isTurning)
+        {
+            rotateTimer = 0;
+        }
+    }
+
+    private void TurnRightOnMiddle()
+    {
+        _lineStartPos = transform.position;
+        _lineEndPos = new Vector3(rightLine.position.x, transform.position.y, transform.position.z);
+
+
+
+        _playerPrevLineState = PlayerLineState.middleLine;
+        _playerLineState = PlayerLineState.rightLine;
+        //anim play
+        StopRoll();
+
+        HandleCharacterTurns(true);
+        //    _anim.SetTrigger("TurnRight");
+
+        if (isTurning)
+        {
+            rotateTimer = 0;
+        }
+    }
+
+    private void TurnLeftOnRight()
+    {
+        _lineStartPos = transform.position;
+        _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
+
+
+        _playerPrevLineState = PlayerLineState.rightLine;
+        _playerLineState = PlayerLineState.middleLine;
+        //anim play
+        StopRoll();
+
+        HandleCharacterTurns(false);
+        //_anim.SetTrigger("TurnLeft");
+
+        if (isTurning)
+        {
+            rotateTimer = 0;
+        }
+    }
+
+    private void TurnLeftOnMiddle()
+    {
+        _lineStartPos = transform.position;
+
+        _lineEndPos = new Vector3(leftLine.position.x, transform.position.y, transform.position.z);
+
+
+        _playerPrevLineState = PlayerLineState.middleLine;
+        _playerLineState = PlayerLineState.leftLine;
+        //anim play
+
+        StopRoll();
+        HandleCharacterTurns(false);
+        // _anim.SetTrigger("TurnLeft");
+
+        if (isTurning)
+        {
+            rotateTimer = 0;
+        }
+    }
+
+
+    #endregion
+
+
     private void HandleCharacterTurns(bool isTurningRight)
     {
         if (isTurningRight)

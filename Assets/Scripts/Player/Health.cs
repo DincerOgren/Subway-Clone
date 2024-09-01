@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class Health : MonoBehaviour
 {
@@ -156,10 +157,14 @@ public class Health : MonoBehaviour
         //StartCoroutine(ShakePlayer());
 
         // Move the player back to the previous lane after the shake
-        //StartCoroutine(MoveToPreviousLane());
-
+        playerMovement.MoveToPreviousLane();
+        //isPlayerTwisted = false;
         print("PLAYER TWISTEDDDDDD");
     }
+
+   
+
+    
     private void CheckError()
     {
         if (!isInErrorPeriod) return;

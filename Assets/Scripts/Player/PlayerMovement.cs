@@ -20,7 +20,7 @@ public class PlayerMovement : MonoBehaviour
     public bool isTakingDamage = false;
 
     [Header("Jump")]
-    public float jumpForce = 5f;
+    public float jumpForce = 9f;
     public bool isJumping = false;
     public bool isGrounded = false;
     public KeyCode jumpKey = KeyCode.Space;
@@ -1091,7 +1091,10 @@ public class PlayerMovement : MonoBehaviour
     public void SetPlayerSpeed(float value)
     {
         playerForwardSpeed = value;
+
     }
+
+    public PlayerLineState GetPlayerLineState() => _playerLineState;
 
 }
 

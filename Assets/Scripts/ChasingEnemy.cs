@@ -81,9 +81,9 @@ public class ChasingEnemy : MonoBehaviour
 
         if (playerLineState != enemyLineState)
         {
-            print("SWITCHHH");
+           // print("SWITCHHH");
             shouldSwitchLines = true;
-            //SwitchLine();
+            SwitchLine();
         }
     }
 
@@ -91,45 +91,84 @@ public class ChasingEnemy : MonoBehaviour
 
     private void SwitchLine()
     {
-        //switch (playerLineState)
-        //{
-        //    case PlayerLineState.leftLine:
-        //        TurnLeft();
-        //        break;
-        //    case PlayerLineState.middleLine:
+        if (!shouldSwitchLines) return;
 
-        //        if (enemyLineState == PlayerLineState.leftLine)
-        //        {
-        //            TurnRight();
-        //        }
-        //        else
-        //        {
-        //            TurnLeft();
-        //        }
-        //        break;
-        //    case PlayerLineState.rightLine:
-        //        TurnRight();
-        //        break;
-        //    default:
-        //        break;
-        //}
+        shouldSwitchLines = false;
+
+        switch (playerLineState)
+        {
+            case PlayerLineState.leftLine:
+                StartCoroutine(TurnLeft());
+                enemyLineState = PlayerLineState.leftLine;
+
+                print("Turn Left;");
+                break;
+            case PlayerLineState.middleLine:
+
+                if (enemyLineState == PlayerLineState.leftLine)
+                {
+                    StartCoroutine(TurnRight());
+                }
+                else
+                {
+                    StartCoroutine(TurnLeft());
+                }
+                print("Middle");
+                enemyLineState = PlayerLineState.middleLine;
+
+                break;
+            case PlayerLineState.rightLine:
+                StartCoroutine(TurnRight());
+                enemyLineState = PlayerLineState.rightLine;
+                print("Right,");
+                break;
+            default:
+                break;
+        }
     }
 
-    private void TurnRight()
+    private IEnumerator TurnRight()
     {
+        print("Right içi");
+
         Vector3 temp = transform.position;
         float xPos = temp.x;
-        temp.x = Mathf.MoveTowards(temp.x, xPos + LINETHRESHOLD, lineChangeSpeed * Time.deltaTime);
-        transform.position = temp;
+        while (true)
+        {
+            if (temp.x == xPos + LINETHRESHOLD)
+            {
+                break;
+            }
+
+            temp.x = Mathf.MoveTowards(temp.x, xPos + LINETHRESHOLD, lineChangeSpeed * Time.deltaTime);
+            transform.position = temp;
+
+            yield return null;
+        }
+       
     }
 
-    private void TurnLeft()
+    private IEnumerator TurnLeft()
     {
 
         Vector3 temp = transform.position;
         float xPos = temp.x;
-        temp.x = Mathf.MoveTowards(temp.x, xPos - LINETHRESHOLD, lineChangeSpeed * Time.deltaTime);
-        transform.position = temp;
+        while (true)
+        {
+            if (temp.x == xPos - LINETHRESHOLD)
+            {
+                break;
+            }
+
+            temp.x = Mathf.MoveTowards(temp.x, xPos - LINETHRESHOLD, lineChangeSpeed * Time.deltaTime);
+            transform.position = temp;
+
+            yield return null;
+        }
+        
+
+        print("Left içi");
+
     }
 
 

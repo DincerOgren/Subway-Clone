@@ -16,6 +16,7 @@ public class ChasingEnemy : MonoBehaviour
     [Header("Jump")]
     public float jumpForce = 9f;
     public float gravityForce = -20f;
+    float _jumpTimer = Mathf.Infinity;
 
 
     [Header("Chase Speed")]
@@ -29,6 +30,9 @@ public class ChasingEnemy : MonoBehaviour
     public float lineChangeSpeed = 15f;
     public static float LINETHRESHOLD = 3f;
     public bool shouldSwitchLines;
+    static float MIDDLELINE=0;
+    static float LEFTLINE = -3;
+    static float RIGHTLINE = 3;
 
 
     [Header("Spawn Variables")]
@@ -45,45 +49,54 @@ public class ChasingEnemy : MonoBehaviour
     private void Awake()
     {
         anim = GetComponent<Animator>();
-        rb=GetComponent<Rigidbody>();
-        
+        rb = GetComponent<Rigidbody>();
+
         playerRef = GameObject.FindWithTag("Player").GetComponent<PlayerMovement>();
 
     }
 
     private void Start()
     {
-        speed = playerRef.GetSpeed();
-        catchUpSpeed = speed * 2;
-        
+        SetSpeed();
+
         enemyLineState = PlayerLineState.middleLine;
     }
 
+    private void SetSpeed()
+    {
+        speed = playerRef.GetSpeed();
+        catchUpSpeed = speed * 2;
+    }
+
+
+    private void Update()
+    {
+        CheckLineStates();
+        CheckGrounded();
+        UpdateTimers();
+        UpdateAnimator();
+        SetSpeed();
+    }
     private void FixedUpdate()
     {
         if (!GameStarter.instance.IsGameStarted()) return;
         //if (_health.IsPlayerDead()) { return; }
 
         Move();
+        SwitchLine();
+
     }
 
-    private void Update()
-    {
-        CheckGrounded();
-        CheckLineStates();
-        UpdateTimers();
-        UpdateAnimator();
-    }
 
     void CheckLineStates()
     {
-       playerLineState = playerRef.GetPlayerLineState();
+        playerLineState = playerRef.GetPlayerLineState();
 
         if (playerLineState != enemyLineState)
         {
-           // print("SWITCHHH");
+            // print("SWITCHHH");
             shouldSwitchLines = true;
-            SwitchLine();
+            //SwitchLine();
         }
     }
 
@@ -91,86 +104,190 @@ public class ChasingEnemy : MonoBehaviour
 
     private void SwitchLine()
     {
-        if (!shouldSwitchLines) return;
+        //if (!shouldSwitchLines) return;
 
-        shouldSwitchLines = false;
+        //shouldSwitchLines = false;
 
-        switch (playerLineState)
+        if (playerLineState == PlayerLineState.leftLine &&  enemyLineState == PlayerLineState.middleLine)
         {
-            case PlayerLineState.leftLine:
-                StartCoroutine(TurnLeft());
-                enemyLineState = PlayerLineState.leftLine;
+            TurnLeft(false);
+        }
+        else if(playerLineState==PlayerLineState.middleLine && enemyLineState == PlayerLineState.leftLine)
+        {
+            TurnRight(true);
+        }
+        else if(playerLineState == PlayerLineState.middleLine && enemyLineState == PlayerLineState.rightLine)
+        {
+            TurnLeft(true);
+        }
+        else if (playerLineState==PlayerLineState.rightLine && enemyLineState == PlayerLineState.middleLine)
+        {
+            TurnRight(false);
+        }
 
-                print("Turn Left;");
-                break;
-            case PlayerLineState.middleLine:
+        //switch (playerLineState)
+        //{
+        //    case PlayerLineState.leftLine:
+        //        StartCoroutine(TurnLeft());
+        //        enemyLineState = PlayerLineState.leftLine;
 
-                if (enemyLineState == PlayerLineState.leftLine)
-                {
-                    StartCoroutine(TurnRight());
-                }
-                else
-                {
-                    StartCoroutine(TurnLeft());
-                }
-                print("Middle");
+        //        print("Turn Left;");
+        //        break;
+        //    case PlayerLineState.middleLine:
+
+        //        if (enemyLineState == PlayerLineState.leftLine)
+        //        {
+        //            //StartCoroutine(TurnRight());
+        //        }
+        //        else
+        //        {
+        //            StartCoroutine(TurnLeft());
+        //        }
+        //        print("Middle");
+        //        enemyLineState = PlayerLineState.middleLine;
+
+        //        break;
+        //    case PlayerLineState.rightLine:
+
+
+
+        //        float targetX = LINETHRESHOLD;
+
+
+        //        // Get the current position
+        //        Vector3 currentPosition = transform.position;
+
+        //        float newX = Mathf.MoveTowards(currentPosition.x, targetX, lineChangeSpeed * Time.deltaTime);
+
+        //        transform.position = new Vector3(newX, currentPosition.y, currentPosition.z);
+
+
+
+
+
+        //        enemyLineState = PlayerLineState.rightLine;
+        //        print("Right,");
+        //        break;
+        //    default:
+        //        break;
+
+
+
+        
+    }
+
+    //private IEnumerator TurnRight()
+    //{
+
+    //}
+
+
+    //private IEnumerator TurnLeft()
+    //{
+
+    //    Vector3 temp = transform.position;
+    //    float xPos = temp.x;
+    //    while (true)
+    //    {
+    //        if (temp.x == xPos - LINETHRESHOLD)
+    //        {
+    //            break;
+    //        }
+
+    //        temp.x = Mathf.MoveTowards(temp.x, xPos - LINETHRESHOLD, lineChangeSpeed * Time.deltaTime);
+    //        transform.position = temp;
+
+    //        yield return null;
+    //    }
+
+
+    //    print("Left içi");
+
+    //}
+
+    private void TurnLeft(bool turnLeftForMiddle)
+    {
+        if (turnLeftForMiddle)
+        {
+            float targetX = MIDDLELINE;
+
+
+            Vector3 currentPosition = transform.position;
+            print("Turn left middle currentpos.x= " + currentPosition.x + " targetx= " + MIDDLELINE);
+
+            float newX = Mathf.MoveTowards(currentPosition.x, targetX, lineChangeSpeed * Time.deltaTime);
+
+            transform.position = new Vector3(newX, currentPosition.y, currentPosition.z);
+
+            if (targetX == currentPosition.x)
+            {
                 enemyLineState = PlayerLineState.middleLine;
 
-                break;
-            case PlayerLineState.rightLine:
-                StartCoroutine(TurnRight());
+            }
+        }
+        else
+        {
+
+
+            float targetX = LEFTLINE;
+
+            Vector3 currentPosition = transform.position;
+
+            float newX = Mathf.MoveTowards(currentPosition.x, targetX, lineChangeSpeed * Time.deltaTime);
+
+            transform.position = new Vector3(newX, currentPosition.y, currentPosition.z);
+
+
+            if (targetX == currentPosition.x)
+            {
+                enemyLineState = PlayerLineState.leftLine;
+
+            }
+
+
+        }
+
+          
+    } 
+    
+    private void TurnRight(bool turnRightForMiddle)
+    {
+        if (turnRightForMiddle)
+        {
+            float targetX = MIDDLELINE;
+
+            Vector3 currentPosition = transform.position;
+            print("Turn right middle currentpos.x= " + currentPosition.x + " targetx= " + MIDDLELINE);
+
+            float newX = Mathf.MoveTowards(currentPosition.x, targetX, lineChangeSpeed * Time.deltaTime);
+
+            transform.position = new Vector3(newX, currentPosition.y, currentPosition.z);
+
+            if (targetX == currentPosition.x)
+            {
+                enemyLineState = PlayerLineState.middleLine;
+            }
+
+        }
+        else
+        {
+
+            float targetX = RIGHTLINE;
+
+            Vector3 currentPosition = transform.position;
+
+            float newX = Mathf.MoveTowards(currentPosition.x, targetX, lineChangeSpeed * Time.deltaTime);
+
+            transform.position = new Vector3(newX, currentPosition.y, currentPosition.z);
+
+            if (targetX == currentPosition.x)
+            {
                 enemyLineState = PlayerLineState.rightLine;
-                print("Right,");
-                break;
-            default:
-                break;
-        }
-    }
-
-    private IEnumerator TurnRight()
-    {
-        print("Right içi");
-
-        Vector3 temp = transform.position;
-        float xPos = temp.x;
-        while (true)
-        {
-            if (temp.x == xPos + LINETHRESHOLD)
-            {
-                break;
             }
 
-            temp.x = Mathf.MoveTowards(temp.x, xPos + LINETHRESHOLD, lineChangeSpeed * Time.deltaTime);
-            transform.position = temp;
-
-            yield return null;
         }
-       
-    }
-
-    private IEnumerator TurnLeft()
-    {
-
-        Vector3 temp = transform.position;
-        float xPos = temp.x;
-        while (true)
-        {
-            if (temp.x == xPos - LINETHRESHOLD)
-            {
-                break;
-            }
-
-            temp.x = Mathf.MoveTowards(temp.x, xPos - LINETHRESHOLD, lineChangeSpeed * Time.deltaTime);
-            transform.position = temp;
-
-            yield return null;
-        }
-        
-
-        print("Left içi");
 
     }
-
 
     void Move()
     {
@@ -200,16 +317,46 @@ public class ChasingEnemy : MonoBehaviour
         {
             moveDir.y += gravityForce * Time.deltaTime;
         }
-        else
-            moveDir.y = 0;
+
 
     }
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("ObstacleGround"))
+        {
+            moveDir.y = 0;
+        }
+    }
+    public void StartJump(float jumpForce)
+    {
+        _jumpTimer = 0;
+        print("Started Jump");
+        StartCoroutine(Jump());
+    }
 
+    IEnumerator Jump()
+    {
+
+        while (true)
+        {
+
+            if (actionDelay <= _jumpTimer)
+            {
+                moveDir.y = jumpForce;
+                _jumpTimer = 5f;
+                print("Jump");
+                break;
+            }
+            _jumpTimer += Time.deltaTime;
+            yield return null;
+        }
+    }
 
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawRay(groundCheck.position, groundCheck.up * -groundCheckDistance);
     }
+
 
 }

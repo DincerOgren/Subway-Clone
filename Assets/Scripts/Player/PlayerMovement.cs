@@ -86,6 +86,8 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 _lineStartPos;
     private Vector3 _lineEndPos;
 
+    [Header("Chasing Enemy")]
+    ChasingEnemy enemy;
 
     [Header("Timers")]
     float speedTimer;
@@ -108,6 +110,7 @@ public class PlayerMovement : MonoBehaviour
         _rb = GetComponent<Rigidbody>();
         _anim = GetComponent<Animator>();
         _health = GetComponent<Health>();
+        enemy = GameObject.FindWithTag("Enemy").GetComponent<ChasingEnemy>();
     }
     void Start()
     {
@@ -292,12 +295,20 @@ public class PlayerMovement : MonoBehaviour
 
     private void Jump()
     {
+
         if (PowerUpManager.instance.GetPowerUpData(PowerUpType.PowerBoots).IsActive)
         {
             moveDir.y = jumpForce * _powerBootsJumpMultiplier;
+            print("EnemyShouldJumpHigher");
+            enemy.StartJump(moveDir.y);
         }
         else
+        {
+
             moveDir.y = jumpForce;
+            print("EnemyShouldJump");
+            enemy.StartJump(moveDir.y);
+        }
         _anim.SetTrigger("Jump");
         _coyoteTimeTimer = coyoteTime;
 
@@ -379,7 +390,7 @@ public class PlayerMovement : MonoBehaviour
         while (elapsedTime < shakeDuration)
         {
             float offsetX = UnityEngine.Random.Range(-1f, 1f) * shakeMagnitude;
-            playerModel.position = new Vector3(transform.position.x + offsetX, transform.position.y,transform.position.z);
+            playerModel.position = new Vector3(transform.position.x + offsetX, transform.position.y, transform.position.z);
 
             elapsedTime += Time.deltaTime;
 
@@ -413,7 +424,7 @@ public class PlayerMovement : MonoBehaviour
         {
             TurnRightOnMiddle();
         }
-        
+
 
     }
     private void eeeer()
@@ -453,7 +464,7 @@ public class PlayerMovement : MonoBehaviour
                 return CanSwipeRight();
             }
         }
-        
+
 
         return false; // No valid swipe detected
     }

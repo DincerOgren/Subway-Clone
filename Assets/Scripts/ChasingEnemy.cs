@@ -18,10 +18,14 @@ public class ChasingEnemy : MonoBehaviour
     public float gravityForce = -20f;
     float _jumpTimer = Mathf.Infinity;
 
+    [Header("Roll")]
+    bool isRolling;
+    public float rollDownForce;
 
     [Header("Chase Speed")]
     public float catchUpSpeed;
     public float speed;
+
 
 
     [Header("Line State")]
@@ -30,10 +34,10 @@ public class ChasingEnemy : MonoBehaviour
     public float lineChangeSpeed = 15f;
     public static float LINETHRESHOLD = 3f;
     public bool shouldSwitchLines;
-    static float MIDDLELINE=0;
+    static float MIDDLELINE = 0;
     static float LEFTLINE = -3;
     static float RIGHTLINE = 3;
-
+    public float snapThreshold = 0.1f;
 
     [Header("Spawn Variables")]
     public float distanceToStop = 2.5f;
@@ -108,184 +112,113 @@ public class ChasingEnemy : MonoBehaviour
 
         //shouldSwitchLines = false;
 
-        if (playerLineState == PlayerLineState.leftLine &&  enemyLineState == PlayerLineState.middleLine)
+        if (playerLineState == PlayerLineState.leftLine && enemyLineState == PlayerLineState.middleLine)
         {
-            TurnLeft(false);
-        }
-        else if(playerLineState==PlayerLineState.middleLine && enemyLineState == PlayerLineState.leftLine)
-        {
-            TurnRight(true);
-        }
-        else if(playerLineState == PlayerLineState.middleLine && enemyLineState == PlayerLineState.rightLine)
-        {
-            TurnLeft(true);
-        }
-        else if (playerLineState==PlayerLineState.rightLine && enemyLineState == PlayerLineState.middleLine)
-        {
-            TurnRight(false);
-        }
-
-        //switch (playerLineState)
-        //{
-        //    case PlayerLineState.leftLine:
-        //        StartCoroutine(TurnLeft());
-        //        enemyLineState = PlayerLineState.leftLine;
-
-        //        print("Turn Left;");
-        //        break;
-        //    case PlayerLineState.middleLine:
-
-        //        if (enemyLineState == PlayerLineState.leftLine)
-        //        {
-        //            //StartCoroutine(TurnRight());
-        //        }
-        //        else
-        //        {
-        //            StartCoroutine(TurnLeft());
-        //        }
-        //        print("Middle");
-        //        enemyLineState = PlayerLineState.middleLine;
-
-        //        break;
-        //    case PlayerLineState.rightLine:
-
-
-
-        //        float targetX = LINETHRESHOLD;
-
-
-        //        // Get the current position
-        //        Vector3 currentPosition = transform.position;
-
-        //        float newX = Mathf.MoveTowards(currentPosition.x, targetX, lineChangeSpeed * Time.deltaTime);
-
-        //        transform.position = new Vector3(newX, currentPosition.y, currentPosition.z);
-
-
-
-
-
-        //        enemyLineState = PlayerLineState.rightLine;
-        //        print("Right,");
-        //        break;
-        //    default:
-        //        break;
-
-
-
-        
-    }
-
-    //private IEnumerator TurnRight()
-    //{
-
-    //}
-
-
-    //private IEnumerator TurnLeft()
-    //{
-
-    //    Vector3 temp = transform.position;
-    //    float xPos = temp.x;
-    //    while (true)
-    //    {
-    //        if (temp.x == xPos - LINETHRESHOLD)
-    //        {
-    //            break;
-    //        }
-
-    //        temp.x = Mathf.MoveTowards(temp.x, xPos - LINETHRESHOLD, lineChangeSpeed * Time.deltaTime);
-    //        transform.position = temp;
-
-    //        yield return null;
-    //    }
-
-
-    //    print("Left içi");
-
-    //}
-
-    private void TurnLeft(bool turnLeftForMiddle)
-    {
-        if (turnLeftForMiddle)
-        {
-            float targetX = MIDDLELINE;
-
-
-            Vector3 currentPosition = transform.position;
-            print("Turn left middle currentpos.x= " + currentPosition.x + " targetx= " + MIDDLELINE);
-
-            float newX = Mathf.MoveTowards(currentPosition.x, targetX, lineChangeSpeed * Time.deltaTime);
-
-            transform.position = new Vector3(newX, currentPosition.y, currentPosition.z);
-
-            if (targetX == currentPosition.x)
-            {
-                enemyLineState = PlayerLineState.middleLine;
-
-            }
-        }
-        else
-        {
-
-
             float targetX = LEFTLINE;
 
-            Vector3 currentPosition = transform.position;
 
-            float newX = Mathf.MoveTowards(currentPosition.x, targetX, lineChangeSpeed * Time.deltaTime);
+            Vector3 temp = transform.position;
+            temp.x = Mathf.MoveTowards(temp.x, targetX, lineChangeSpeed * Time.deltaTime);
+            transform.position = temp;
 
-            transform.position = new Vector3(newX, currentPosition.y, currentPosition.z);
-
-
-            if (targetX == currentPosition.x)
+            if (Mathf.Abs(targetX - transform.position.x) < snapThreshold)
             {
+                transform.position = new Vector3(targetX, temp.y, temp.z);
                 enemyLineState = PlayerLineState.leftLine;
-
             }
-
-
         }
-
-          
-    } 
-    
-    private void TurnRight(bool turnRightForMiddle)
-    {
-        if (turnRightForMiddle)
+        else if (playerLineState == PlayerLineState.middleLine && enemyLineState == PlayerLineState.leftLine)
         {
             float targetX = MIDDLELINE;
 
-            Vector3 currentPosition = transform.position;
-            print("Turn right middle currentpos.x= " + currentPosition.x + " targetx= " + MIDDLELINE);
 
-            float newX = Mathf.MoveTowards(currentPosition.x, targetX, lineChangeSpeed * Time.deltaTime);
+            Vector3 temp = transform.position;
+            temp.x = Mathf.MoveTowards(temp.x, targetX, lineChangeSpeed * Time.deltaTime);
+            transform.position = temp;
 
-            transform.position = new Vector3(newX, currentPosition.y, currentPosition.z);
-
-            if (targetX == currentPosition.x)
+            if (Mathf.Abs(targetX - transform.position.x) < snapThreshold)
             {
+                transform.position = new Vector3(targetX, temp.y, temp.z);
                 enemyLineState = PlayerLineState.middleLine;
             }
-
         }
-        else
+        else if (playerLineState == PlayerLineState.middleLine && enemyLineState == PlayerLineState.rightLine)
         {
+            float targetX = MIDDLELINE;
 
+
+            Vector3 temp = transform.position;
+            temp.x = Mathf.MoveTowards(temp.x, targetX, lineChangeSpeed * Time.deltaTime);
+            transform.position = temp;
+
+            if (Mathf.Abs(targetX - transform.position.x) < snapThreshold)
+            {
+                transform.position = new Vector3(targetX, temp.y, temp.z);
+                enemyLineState = PlayerLineState.middleLine;
+            }
+        }
+        else if (playerLineState == PlayerLineState.rightLine && enemyLineState == PlayerLineState.middleLine)
+        {
             float targetX = RIGHTLINE;
 
-            Vector3 currentPosition = transform.position;
 
-            float newX = Mathf.MoveTowards(currentPosition.x, targetX, lineChangeSpeed * Time.deltaTime);
+            Vector3 temp = transform.position;
 
-            transform.position = new Vector3(newX, currentPosition.y, currentPosition.z);
+            temp.x = Mathf.MoveTowards(temp.x, targetX, lineChangeSpeed * Time.deltaTime);
 
-            if (targetX == currentPosition.x)
+            transform.position = temp;
+
+            if (Mathf.Abs(targetX - transform.position.x) < snapThreshold)
             {
+                transform.position = new Vector3(targetX, temp.y, temp.z);
                 enemyLineState = PlayerLineState.rightLine;
             }
+        }
+        else if (playerLineState == enemyLineState)
+        {
+            float targetX = 0;
+
+            if (playerLineState == PlayerLineState.leftLine)
+            {
+                targetX = LEFTLINE;
+            }
+            else if (playerLineState == PlayerLineState.rightLine)
+            {
+                targetX = RIGHTLINE;
+            }
+            else
+                targetX = MIDDLELINE;
+
+
+            Vector3 temp = transform.position;
+            temp.x = Mathf.MoveTowards(temp.x, targetX, lineChangeSpeed * Time.deltaTime);
+            transform.position = temp;
 
         }
+        else if (playerLineState == PlayerLineState.leftLine && enemyLineState == PlayerLineState.rightLine ||
+            playerLineState == PlayerLineState.rightLine && enemyLineState == PlayerLineState.leftLine)
+        {
+            float targetX = 0;
+            if (playerLineState == PlayerLineState.rightLine)
+            {
+                targetX = RIGHTLINE;
+            }
+            else
+                targetX = LEFTLINE;
+
+            Vector3 temp = transform.position;
+
+            temp.x = Mathf.MoveTowards(temp.x, targetX, lineChangeSpeed * Time.deltaTime);
+
+            transform.position = temp;
+
+            if (Mathf.Abs(targetX - transform.position.x) < snapThreshold)
+            {
+                transform.position = new Vector3(targetX, temp.y, temp.z);
+                enemyLineState = PlayerLineState.leftLine;
+            }
+        }
+
 
     }
 
@@ -339,17 +272,31 @@ public class ChasingEnemy : MonoBehaviour
 
         while (true)
         {
-
             if (actionDelay <= _jumpTimer)
             {
                 moveDir.y = jumpForce;
                 _jumpTimer = 5f;
                 print("Jump");
+                anim.SetTrigger("Jump");
                 break;
             }
             _jumpTimer += Time.deltaTime;
             yield return null;
         }
+
+    }
+
+    public void Roll()
+    {
+        if (isRolling && !isGrounded)
+        {
+            rb.AddForce(Vector3.down * rollDownForce, ForceMode.Acceleration);
+        }
+        else
+            anim.SetTrigger("Roll");
+
+        _jumpTimer += Time.deltaTime;
+
     }
 
     private void OnDrawGizmos()

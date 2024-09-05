@@ -179,12 +179,14 @@ public class PlayerMovement : MonoBehaviour
         {
             isRolling = true;
             _anim.SetTrigger("Roll");
+            enemy.Roll();
             rollCoroutine = StartCoroutine(RollSequence());
 
         }
 
         if (isRolling && !isGrounded)
         {
+            enemy.Roll();
             _rb.AddForce(Vector3.down * rollDownForce, ForceMode.Acceleration);
         }
     }

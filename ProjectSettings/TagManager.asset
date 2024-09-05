@@ -16,6 +16,7 @@ TagManager:
   - PlayerModel
   - TrainFront
   - TrainSide
+  - Enemy
   layers:
   - Default
   - TransparentFX

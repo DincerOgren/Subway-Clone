@@ -25,7 +25,21 @@ public class ChasingEnemy : MonoBehaviour
     [Header("Chase Speed")]
     public float catchUpSpeed;
     public float speed;
+    public float slowingSpeed;
 
+    [Header("Chase Variables")]
+    public bool shouldChasePlayer;
+    public bool isStartedChasing;
+    public bool isInThreshold;
+    public bool isInSlowingState;
+
+    public bool isCatchedPlayer;
+    public float playerChaseThreshold=3f;
+
+    public float chaseDuration = 3f;
+    public float chaseTimer = Mathf.Infinity;
+
+    public float disappearThreshold = 10f;
 
 
     [Header("Line State")]
@@ -45,6 +59,7 @@ public class ChasingEnemy : MonoBehaviour
 
     public float actionDelay = .5f;
     float _delayTimer = Mathf.Infinity;
+
     Animator anim;
     Rigidbody rb;
     PlayerMovement playerRef;
@@ -62,15 +77,12 @@ public class ChasingEnemy : MonoBehaviour
     private void Start()
     {
         SetSpeed();
-
+        shouldChasePlayer = true;
+        isStartedChasing = true;
         enemyLineState = PlayerLineState.middleLine;
     }
 
-    private void SetSpeed()
-    {
-        speed = playerRef.GetSpeed();
-        catchUpSpeed = speed * 2;
-    }
+   
 
 
     private void Update()
@@ -80,6 +92,7 @@ public class ChasingEnemy : MonoBehaviour
         UpdateTimers();
         UpdateAnimator();
         SetSpeed();
+        Chase();
     }
     private void FixedUpdate()
     {
@@ -91,7 +104,46 @@ public class ChasingEnemy : MonoBehaviour
 
     }
 
+    public void StartChase(bool v) => shouldChasePlayer = v; 
 
+    void Chase()
+    {
+        if (!shouldChasePlayer) return;
+
+        if (Vector3.Distance(transform.position, playerRef.transform.position) <= playerChaseThreshold && !isInThreshold && !isInSlowingState)
+        {
+            isInThreshold = true;
+            chaseTimer = 0;
+            print("isInThreshold=true");
+            isStartedChasing = false;
+        }
+        
+        if (isInThreshold && chaseTimer>=chaseDuration)
+        {
+            isInThreshold = false;
+            isInSlowingState = true;
+            print("isSlowing = true");
+
+        }
+
+        if (isInSlowingState)
+        {
+            if (Vector3.Distance(transform.position, playerRef.transform.position) >= disappearThreshold)
+            {
+                shouldChasePlayer = false;
+                isInSlowingState = false;
+                print("Should end now");
+                gameObject.SetActive(false);
+            }
+        }
+    }
+    private void SetSpeed()
+    {
+       // print("DISTANCE = = "+Vector3.Distance(transform.position, playerRef.transform.position));
+        speed = playerRef.GetSpeed();
+        catchUpSpeed = speed * 1.2f;
+        slowingSpeed = speed * .5f;
+    }
     void CheckLineStates()
     {
         playerLineState = playerRef.GetPlayerLineState();
@@ -224,7 +276,23 @@ public class ChasingEnemy : MonoBehaviour
 
     void Move()
     {
-        moveDir.z = speed;
+        if (isStartedChasing)
+        {
+            print("moving = ChaseSpeed");
+            moveDir.z = catchUpSpeed;
+        }
+        else if (isInThreshold)
+        {
+            moveDir.z = speed;
+            print("moving = normalSpeed");
+
+        }
+        else if (isInSlowingState)
+        {
+            moveDir.z = slowingSpeed;
+            print("moving = slowingSpeed");
+
+        }
 
         rb.velocity = moveDir;
 
@@ -234,6 +302,7 @@ public class ChasingEnemy : MonoBehaviour
     void UpdateTimers()
     {
         _delayTimer += Time.deltaTime;
+        chaseTimer += Time.deltaTime;
     }
 
     void UpdateAnimator()

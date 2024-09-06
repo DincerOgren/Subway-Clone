@@ -45,6 +45,8 @@ public class Health : MonoBehaviour
     public float _twistedTimer = Mathf.Infinity;
 
 
+    ChasingEnemy enemyRef;
+
     //[Header("Knockback")]
     //[SerializeField] float knockBackForce = 10f;
     //[SerializeField] float knockBackSpeed = 20f;
@@ -55,6 +57,7 @@ public class Health : MonoBehaviour
     private void Awake()
     {
         playerMovement = GetComponent<PlayerMovement>();
+        enemyRef = GameObject.FindWithTag("Enemy").GetComponent<ChasingEnemy>();
     }
 
     private void Start()
@@ -101,7 +104,10 @@ public class Health : MonoBehaviour
         if (_twistedTimer >= twistedTime)
         {
             isPlayerTwisted = false;
+           // enemyRef.StartChase(false);
         }
+        enemyRef.gameObject.SetActive(true);
+        enemyRef.StartChase(true);
         print("PLAYER TWISTEDDDDDD");
     }
 

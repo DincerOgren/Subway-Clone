@@ -23,9 +23,13 @@ public class ChasingEnemy : MonoBehaviour
     public float rollDownForce;
 
     [Header("Chase Speed")]
-    public float catchUpSpeed;
-    public float speed;
-    public float slowingSpeed;
+    public float catchUpSpeedMultiplier;
+    public float slowingSpeedMultiplier;
+
+
+    private  float _catchUpSpeed;
+    private float _speed;
+    private float _slowingSpeed;
 
     [Header("Chase Variables")]
     public bool shouldChasePlayer;
@@ -34,7 +38,7 @@ public class ChasingEnemy : MonoBehaviour
     public bool isInSlowingState;
 
     public bool isCatchedPlayer;
-    public float playerChaseThreshold=3f;
+    public float playerChaseThreshold = 3f;
 
     public float chaseDuration = 3f;
     public float chaseTimer = Mathf.Infinity;
@@ -61,14 +65,20 @@ public class ChasingEnemy : MonoBehaviour
     float _delayTimer = Mathf.Infinity;
 
     Animator anim;
-    Rigidbody rb;
+    Rigidbody _rb;
     PlayerMovement playerRef;
     Vector3 moveDir;
+
+    RaycastHit slopeHit;
+    [SerializeField] float slopeSpeedMultiplier = 1.2f; 
+    [SerializeField] float slopeRaycastDist = .1f;
+    [SerializeField] float maxSlopeAngle;
+    public LayerMask groundLayer;
 
     private void Awake()
     {
         anim = GetComponent<Animator>();
-        rb = GetComponent<Rigidbody>();
+        _rb = GetComponent<Rigidbody>();
 
         playerRef = GameObject.FindWithTag("Player").GetComponent<PlayerMovement>();
 
@@ -82,17 +92,18 @@ public class ChasingEnemy : MonoBehaviour
         enemyLineState = PlayerLineState.middleLine;
     }
 
-   
+
 
 
     private void Update()
     {
+        SetSpeed();
+        Chase();
         CheckLineStates();
         CheckGrounded();
         UpdateTimers();
         UpdateAnimator();
-        SetSpeed();
-        Chase();
+        
     }
     private void FixedUpdate()
     {
@@ -104,12 +115,21 @@ public class ChasingEnemy : MonoBehaviour
 
     }
 
-    public void StartChase(bool v) => shouldChasePlayer = v; 
+    public void StartChase(Vector3 playerPos)
+    {
+        transform.position = playerPos + Vector3.back * teleportDistance;
 
+        shouldChasePlayer = true;
+        isStartedChasing = true;
+        isInThreshold = false; 
+        isInSlowingState = false;
+
+        SetSpeed();
+    }
     void Chase()
     {
         if (!shouldChasePlayer) return;
-
+        print("InChase");
         if (Vector3.Distance(transform.position, playerRef.transform.position) <= playerChaseThreshold && !isInThreshold && !isInSlowingState)
         {
             isInThreshold = true;
@@ -117,8 +137,8 @@ public class ChasingEnemy : MonoBehaviour
             print("isInThreshold=true");
             isStartedChasing = false;
         }
-        
-        if (isInThreshold && chaseTimer>=chaseDuration)
+
+        if (isInThreshold && chaseTimer >= chaseDuration)
         {
             isInThreshold = false;
             isInSlowingState = true;
@@ -133,16 +153,17 @@ public class ChasingEnemy : MonoBehaviour
                 shouldChasePlayer = false;
                 isInSlowingState = false;
                 print("Should end now");
+                playerRef.GetComponent<Health>().ResetChase();
                 gameObject.SetActive(false);
             }
         }
     }
     private void SetSpeed()
     {
-       // print("DISTANCE = = "+Vector3.Distance(transform.position, playerRef.transform.position));
-        speed = playerRef.GetSpeed();
-        catchUpSpeed = speed * 1.2f;
-        slowingSpeed = speed * .5f;
+        // print("DISTANCE = = "+Vector3.Distance(transform.position, playerRef.transform.position));
+        _speed = playerRef.GetSpeed();
+        _catchUpSpeed = _speed *catchUpSpeedMultiplier;
+        _slowingSpeed = _speed * slowingSpeedMultiplier;
     }
     void CheckLineStates()
     {
@@ -279,26 +300,50 @@ public class ChasingEnemy : MonoBehaviour
         if (isStartedChasing)
         {
             print("moving = ChaseSpeed");
-            moveDir.z = catchUpSpeed;
+            moveDir.z = _catchUpSpeed;
         }
         else if (isInThreshold)
         {
-            moveDir.z = speed;
+            moveDir.z = _speed;
             print("moving = normalSpeed");
 
         }
         else if (isInSlowingState)
         {
-            moveDir.z = slowingSpeed;
+            moveDir.z = _slowingSpeed;
             print("moving = slowingSpeed");
 
         }
 
-        rb.velocity = moveDir;
+        if (OnSlope())
+        {
+            float currentSpeed = _rb.velocity.magnitude;
+            moveDir.y = 0;
+            var newMovdir = GetSlopeMoveDirection();
+            //newMovdir.y *= currentSpeed * slopeSpeedMultiplier;
+            //newMovdir.z *= currentSpeed * slopeSpeedMultiplier;
+            float slopeSpeed = _speed * slopeSpeedMultiplier;
+            newMovdir *= slopeSpeed;
+            _rb.velocity = newMovdir;
+        }
+        else
+            _rb.velocity = moveDir;
 
     }
+    bool OnSlope()
+    {
+        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, slopeRaycastDist))
+        {
+            float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
+            return angle < maxSlopeAngle && angle != 0;
+        }
+        return false;
+    }
+    Vector3 GetSlopeMoveDirection()
+    {
+        return Vector3.ProjectOnPlane(moveDir, slopeHit.normal).normalized;
 
-
+    }
     void UpdateTimers()
     {
         _delayTimer += Time.deltaTime;
@@ -313,7 +358,8 @@ public class ChasingEnemy : MonoBehaviour
 
     void CheckGrounded()
     {
-        isGrounded = Physics.Raycast(groundCheck.position, Vector3.down, groundCheckDistance);
+        isGrounded = Physics.Raycast(groundCheck.position, Vector3.down, groundCheckDistance,groundLayer);
+
 
         if (!isGrounded)
         {
@@ -331,8 +377,10 @@ public class ChasingEnemy : MonoBehaviour
     }
     public void StartJump(float jumpForce)
     {
+        if (!isGrounded) return;
         _jumpTimer = 0;
         print("Started Jump");
+
         StartCoroutine(Jump());
     }
 
@@ -359,7 +407,7 @@ public class ChasingEnemy : MonoBehaviour
     {
         if (isRolling && !isGrounded)
         {
-            rb.AddForce(Vector3.down * rollDownForce, ForceMode.Acceleration);
+            _rb.AddForce(Vector3.down * rollDownForce, ForceMode.Acceleration);
         }
         else
             anim.SetTrigger("Roll");

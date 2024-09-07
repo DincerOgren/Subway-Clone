@@ -8,7 +8,7 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] float playerForwardSpeed = 5f;
     [SerializeField] float maxPlayerSpeed = 15f;
-    [SerializeField] float slopeSpeedMultiplier = 8f;
+    [SerializeField] float slopeSpeedMultiplier = 1.2f;
     [SerializeField] float animationSpeedMultiplier = 1f;
     [SerializeField] float speedTickRate = 1f;
 
@@ -179,14 +179,20 @@ public class PlayerMovement : MonoBehaviour
         {
             isRolling = true;
             _anim.SetTrigger("Roll");
-            enemy.Roll();
+            if (enemy.isActiveAndEnabled)
+            {
+                enemy.Roll();
+            }
             rollCoroutine = StartCoroutine(RollSequence());
 
         }
 
         if (isRolling && !isGrounded)
         {
-            enemy.Roll();
+            if (enemy.isActiveAndEnabled)
+            {
+                enemy.Roll();
+            }
             _rb.AddForce(Vector3.down * rollDownForce, ForceMode.Acceleration);
         }
     }
@@ -302,7 +308,11 @@ public class PlayerMovement : MonoBehaviour
         {
             moveDir.y = jumpForce * _powerBootsJumpMultiplier;
             print("EnemyShouldJumpHigher");
-            enemy.StartJump(moveDir.y);
+            if (enemy.isActiveAndEnabled)
+            {
+
+                enemy.StartJump(moveDir.y);
+            }
         }
         else
         {

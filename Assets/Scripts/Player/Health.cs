@@ -46,7 +46,7 @@ public class Health : MonoBehaviour
 
 
     ChasingEnemy enemyRef;
-
+    bool _chaseStarted;
     //[Header("Knockback")]
     //[SerializeField] float knockBackForce = 10f;
     //[SerializeField] float knockBackSpeed = 20f;
@@ -101,14 +101,22 @@ public class Health : MonoBehaviour
     {
         if (!isPlayerTwisted) return;
 
+        if (!_chaseStarted)
+        {
+            enemyRef.gameObject.SetActive(true);
+
+            enemyRef.StartChase(transform.position);
+            _chaseStarted = true;
+        
+        }
         if (_twistedTimer >= twistedTime)
         {
             isPlayerTwisted = false;
-           // enemyRef.StartChase(false);
+            // enemyRef.StartChase(false);
         }
-        enemyRef.gameObject.SetActive(true);
-        enemyRef.StartChase(true);
-        print("PLAYER TWISTEDDDDDD");
+       
+
+        //print("PLAYER TWISTEDDDDDD");
     }
 
     private void CheckInvincible()
@@ -165,12 +173,12 @@ public class Health : MonoBehaviour
         // Move the player back to the previous lane after the shake
         playerMovement.MoveToPreviousLane();
         //isPlayerTwisted = false;
-        print("PLAYER TWISTEDDDDDD");
+        //print("PLAYER TWISTEDDDDDD");
     }
 
-   
 
-    
+
+
     private void CheckError()
     {
         if (!isInErrorPeriod) return;
@@ -316,6 +324,11 @@ public class Health : MonoBehaviour
 
 
         gameObject.SetActive(false);
+    }
+
+    public void ResetChase()
+    {
+        _chaseStarted = false;
     }
 
     private void UpdateUI()

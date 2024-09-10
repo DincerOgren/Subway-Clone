@@ -17,6 +17,7 @@ TagManager:
   - TrainFront
   - TrainSide
   - Enemy
+  - ChunkEnd
   layers:
   - Default
   - TransparentFX

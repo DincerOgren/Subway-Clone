@@ -44,12 +44,8 @@ public class Car : MonoBehaviour
         while (i < goldSpawnAmount)
         {
             var coinObject = CoinPool(PoolingLists.coinList);
-            print("PARENT POS: " + goldSpawnLoc.position);
-            print("PARENT LOCALPOS: " + goldSpawnLoc.localPosition);
             coinObject.transform.position =
                 new Vector3(temp.x, goldSpawnLoc.position.y, goldSpawnLoc.position.z + coinZOffset + i * goldSpaceBetween);
-            print("POS: " + coinObject.transform.position.z);
-
             i++;
             coinObject.transform.parent = goldSpawnLoc;
 

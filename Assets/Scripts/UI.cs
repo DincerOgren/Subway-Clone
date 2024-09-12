@@ -23,8 +23,17 @@ public class UI : MonoBehaviour
 
     public void RestartButton()
     {
-       SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-     //   GameStarter.instance.RestartGame();
+        //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        //   GameStarter.instance.RestartGame();
+        GameManager.Instance.DeleteAllChilds();
+        GameManager.Instance.ResetPlayerLocation();
+
+
+        //Spawn Start plane 
+        // Change UI's 
+        //Change HEalth states 
+        // Reset Chasing Enemy;
+
     }
 
     public void QuitButton()

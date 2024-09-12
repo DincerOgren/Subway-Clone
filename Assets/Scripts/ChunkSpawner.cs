@@ -10,6 +10,9 @@ public class ChunkSpawner : MonoBehaviour
 
     List<GameObject> spawnedChunks = new List<GameObject>();
     public float spawnOffset = 20;
+
+
+
     private void Start()
     {
         SpawnChunk();
@@ -49,8 +52,8 @@ public class ChunkSpawner : MonoBehaviour
             ActivateAllObjectsInChunk(selectedChunk);
         }
 
-        Instantiate(selectedChunk, new Vector3(0,0,transform.position.z + spawnOffset), Quaternion.identity);
-
+        var a = Instantiate(selectedChunk, new Vector3(0,0,transform.position.z + spawnOffset), Quaternion.identity);
+        a.transform.parent = GameManager.Instance.spawnedTileParent;
 
     }
 
@@ -86,4 +89,6 @@ public class ChunkSpawner : MonoBehaviour
 
         return tiles[randomNum];    
     }
+
+    
 }

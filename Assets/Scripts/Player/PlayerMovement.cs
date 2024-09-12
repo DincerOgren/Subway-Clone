@@ -746,6 +746,7 @@ public class PlayerMovement : MonoBehaviour
         {
             if (endTouchPosition.x < startTouchPosition.x)
             {
+                jumpQueued = false;
                 //turn left
                 //Turn Left on middle line
                 if (_playerLineState == PlayerLineState.middleLine)
@@ -761,6 +762,8 @@ public class PlayerMovement : MonoBehaviour
             }
             else if (endTouchPosition.x > startTouchPosition.x)
             {
+                jumpQueued = false;
+
                 //Turn Right on middle line
                 if (_playerLineState == PlayerLineState.middleLine)
                 {
@@ -795,6 +798,8 @@ public class PlayerMovement : MonoBehaviour
             }
             else if (endTouchPosition.y < startTouchPosition.y)
             {
+                jumpQueued = false;
+
                 if (!isRolling)
                 {
                     isRolling = true;

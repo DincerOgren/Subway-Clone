@@ -37,10 +37,15 @@ public class Tile : MonoBehaviour
 
         if (random == 1)
         {
-            Instantiate(train, spawnLocations[triggerEnterTimes].position + Vector3.right * 3, Quaternion.Euler(0, 180, 0));
+            var a = Instantiate(train, spawnLocations[triggerEnterTimes].position + Vector3.right * 3, Quaternion.Euler(0, 180, 0));
+            a.transform.parent = GameManager.Instance.spawnedTrainParent;
         }
         else
-            Instantiate(train, spawnLocations[triggerEnterTimes].position + Vector3.right * -3, Quaternion.Euler(0, 180, 0));
+        {
+
+            var a = Instantiate(train, spawnLocations[triggerEnterTimes].position + Vector3.right * -3, Quaternion.Euler(0, 180, 0));
+            a.transform.parent = GameManager.Instance.spawnedTrainParent;
+        }
 
         triggerEnterTimes++;
 

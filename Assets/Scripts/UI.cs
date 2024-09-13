@@ -25,9 +25,8 @@ public class UI : MonoBehaviour
     {
         //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         //   GameStarter.instance.RestartGame();
-        GameManager.Instance.DeleteAllChilds();
-        GameManager.Instance.ResetPlayerLocation();
 
+        GameManager.Instance.RestartSequence();
 
         //Spawn Start plane 
         // Change UI's 

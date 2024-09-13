@@ -41,7 +41,7 @@ public class ScoreManager : MonoBehaviour
 
     private void Update()
     {
-        if (!GameStarter.instance.IsGameStarted()) return;
+        if (!GameStarter.Instance.IsGameStarted()) return;
         if (playerRef.IsPlayerDead()) return;
 
         if (scoreTimer > scoreTickRate)

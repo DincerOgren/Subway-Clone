@@ -126,7 +126,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        if (GameStarter.instance.IsGameStarted())
+        if (GameStarter.Instance.IsGameStarted())
         {
             HandleTouchInput();
             IncreaseSpeed();
@@ -149,7 +149,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!GameStarter.instance.IsGameStarted()) return;
+        if (!GameStarter.Instance.IsGameStarted()) return;
         if (_health.IsPlayerDead()) { return; }
 
         ChangeLine();
@@ -252,7 +252,7 @@ public class PlayerMovement : MonoBehaviour
     {
         _anim.SetBool("isJumping", isJumping);
         _anim.SetBool("isGrounded", isGrounded);
-        _anim.SetBool("isGameStarted", GameStarter.instance.IsGameStarted());
+        _anim.SetBool("isGameStarted", GameStarter.Instance.IsGameStarted());
         _anim.SetBool("isSkateboarding", _isSkating);
 
     }

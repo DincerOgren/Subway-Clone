@@ -8,7 +8,8 @@ public class TouchAreaUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     // This method is called when the touch begins
     public void OnPointerDown(PointerEventData eventData)
     {
-        GameStarter.instance.shouldStartGame = true;
+        print("Should Start");
+        GameStarter.Instance.shouldStartGame = true;
        
     }
 

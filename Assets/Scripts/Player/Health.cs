@@ -322,6 +322,7 @@ public class Health : MonoBehaviour
         PlayerCollectibleManager.instance.AddCurrentCoinsToCoins();
         PlayerCollectibleManager.instance.ResetCoins();
 
+        GameStarter.Instance.ChangeCamera();
 
         gameObject.SetActive(false);
     }

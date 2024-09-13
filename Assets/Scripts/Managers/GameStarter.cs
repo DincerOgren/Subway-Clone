@@ -9,7 +9,7 @@ using UnityEngine;
 
 public class GameStarter : MonoBehaviour
 {
-    public static GameStarter instance;
+    public static GameStarter Instance;
     [SerializeField] CinemachineVirtualCamera starterCamera;
     [SerializeField] CinemachineVirtualCamera followCamera;
 
@@ -34,7 +34,17 @@ public class GameStarter : MonoBehaviour
     }
     private void Start()
     {
-        instance = this;
+        Instance = this;
+
+        if (Instance != null && Instance != this)
+        {
+            Destroy(this);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(this.gameObject);
+
+
         playerStartPos = playerRef.position;
         playerAngles = playerRef.eulerAngles;
         highScore.text = PlayerPrefs.GetFloat("HighScore").ToString();
@@ -59,6 +69,24 @@ public class GameStarter : MonoBehaviour
         inGameCanvas.SetActive(true);
     }
 
+    public void ChangeCamera()
+    {
+
+        starterCamera.Priority = 10;
+        followCamera.Priority = 1;
+    }
+    public void RestartGame()
+    {
+        isGameStarted = false;
+        shouldStartGame = false;
+        playerRef.transform.eulerAngles = playerAngles;
+        playerRef.transform.position = playerStartPos;
+        startCanvas.SetActive(true);
+        endGameCanvas.SetActive(false);
+        inGameCanvas.SetActive(false);
+        highScore.text = PlayerPrefs.GetFloat("HighScore").ToString();
+
+    }
 
     public bool IsGameStarted() => isGameStarted;
 

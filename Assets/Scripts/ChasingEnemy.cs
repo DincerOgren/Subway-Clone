@@ -75,6 +75,7 @@ public class ChasingEnemy : MonoBehaviour
     [SerializeField] float maxSlopeAngle;
     public LayerMask groundLayer;
 
+    Vector3 startPos;
     private void Awake()
     {
         anim = GetComponent<Animator>();
@@ -90,6 +91,7 @@ public class ChasingEnemy : MonoBehaviour
         shouldChasePlayer = true;
         isStartedChasing = true;
         enemyLineState = PlayerLineState.middleLine;
+        startPos = transform.position;
     }
 
 
@@ -107,7 +109,7 @@ public class ChasingEnemy : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        if (!GameStarter.instance.IsGameStarted()) return;
+        if (!GameStarter.Instance.IsGameStarted()) return;
         //if (_health.IsPlayerDead()) { return; }
 
         Move();
@@ -178,7 +180,15 @@ public class ChasingEnemy : MonoBehaviour
     }
 
 
+    public void ResetChasingEnemy()
+    {
+        transform.position = startPos;
+        shouldChasePlayer = true;
+        isStartedChasing = true;
 
+        isInSlowingState = false;
+        isInThreshold = false;
+    }
     private void SwitchLine()
     {
         //if (!shouldSwitchLines) return;

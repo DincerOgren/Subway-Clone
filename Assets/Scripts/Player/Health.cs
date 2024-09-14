@@ -136,7 +136,7 @@ public class Health : MonoBehaviour
             return;
         }
 
-        if (collision.collider.CompareTag("TrainFront"))
+        if (collision.collider.CompareTag("TrainFront") || collision.collider.CompareTag("Obstacle"))
         {
             // If the player hits the front, they die immediately
             if (!isInErrorPeriod)

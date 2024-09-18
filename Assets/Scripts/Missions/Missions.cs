@@ -32,7 +32,7 @@ public class Missions : MonoBehaviour
 
         if(mission.CheckMission())
         {
-            IsMissionFinished();
+            IsMissionFinished(mission);
         }
 
       
@@ -49,6 +49,7 @@ public class Missions : MonoBehaviour
     
     void GiveReward(Mission mission){
         // GameManager.instance.scoreMultiplier += mission.RewardPoints;
+        print("Reward Granted" + mission.rewardX);
     }
   
 }
@@ -60,16 +61,16 @@ public class Mission
     public int missionCap = 0;
 
     public bool isDone;
-    public bool rewardX=1;
+    public int rewardX = 1;
 
-    public void CheckMission()
+    public bool CheckMission()
     {
         if(missionProgress == missionCap){
             isDone=true;
             return true;
         }
         else
-            false;
+            return false;
     }
 
     public void AddToMission(){

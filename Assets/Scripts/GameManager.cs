@@ -45,6 +45,7 @@ public class GameManager : MonoBehaviour
     {
         _playerRef.gameObject.SetActive(true);
         _playerRef.position = _startPosition;
+        _playerRef.GetComponent<Health>().ResetDeadState();
     }
 
     public void RestartSequence()
@@ -57,6 +58,8 @@ public class GameManager : MonoBehaviour
         ResetEnemy();
 
         GameStarter.Instance.RestartGame();
+
+        ChunkSpawner.Instance.SpawnChunk();
 
 
     }

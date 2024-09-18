@@ -38,12 +38,15 @@ public class Tile : MonoBehaviour
         if (random == 1)
         {
             var a = Instantiate(train, spawnLocations[triggerEnterTimes].position + Vector3.right * 3, Quaternion.Euler(0, 180, 0));
+            print("Train name : " + a.name);
             a.transform.parent = GameManager.Instance.spawnedTrainParent;
         }
         else
         {
 
             var a = Instantiate(train, spawnLocations[triggerEnterTimes].position + Vector3.right * -3, Quaternion.Euler(0, 180, 0));
+            print("Train name : " + a.name);
+
             a.transform.parent = GameManager.Instance.spawnedTrainParent;
         }
 

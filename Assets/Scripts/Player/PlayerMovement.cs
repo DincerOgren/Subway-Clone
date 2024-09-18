@@ -128,6 +128,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (GameStarter.Instance.IsGameStarted())
         {
+            print("game Started");
             HandleTouchInput();
             IncreaseSpeed();
             //CheckJump();
@@ -139,6 +140,13 @@ public class PlayerMovement : MonoBehaviour
             UpdateAnimator();
             CheckRotation();
             HandleSkate();
+            print("player speed = " + playerForwardSpeed);
+        }
+        else
+        {
+            print("game not started");
+            print("player speed is not = " + playerForwardSpeed);
+
         }
         rotateTimer += Time.deltaTime;
 
@@ -149,9 +157,16 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!GameStarter.Instance.IsGameStarted()) return;
+        print("Speed "+ moveDir);
+        if (!GameStarter.Instance.IsGameStarted()) 
+        {
+            moveDir = Vector3.zero;
+            return;
+        }
         if (_health.IsPlayerDead()) { return; }
 
+
+        print("in fixed");
         ChangeLine();
 
         moveDir.z = playerForwardSpeed;

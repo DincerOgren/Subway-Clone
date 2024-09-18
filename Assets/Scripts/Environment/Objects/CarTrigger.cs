@@ -29,7 +29,8 @@ public class CarTrigger : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            Instantiate(train, spawnLoc.position, Quaternion.Euler(0, 180, 0));
+            var a = Instantiate(train, spawnLoc.position, Quaternion.Euler(0, 180, 0));
+            a.transform.parent = GameManager.Instance.spawnedTrainParent;
             StartCoroutine(SpawnTrains());
 
         }
@@ -60,12 +61,17 @@ public class CarTrigger : MonoBehaviour
                 if (i % 2 != 0)
                 {
 
-                    Instantiate(train, new Vector3(0, 0, playerRef.position.z + distanceFromPlayer), Quaternion.Euler(0, 180, 0));
+                   var a = Instantiate(train, new Vector3(0, 0, playerRef.position.z + distanceFromPlayer), Quaternion.Euler(0, 180, 0));
+                    a.transform.parent = GameManager.Instance.spawnedTrainParent;
+
                 }
                 else if (i % 2 == 0)
                 {
-                    Instantiate(train, new Vector3(3, 0, playerRef.position.z + distanceFromPlayer), Quaternion.Euler(0, 180, 0));
-                    Instantiate(train, new Vector3(-3, 0, playerRef.position.z + distanceFromPlayer), Quaternion.Euler(0, 180, 0));
+                    var a = Instantiate(train, new Vector3(3, 0, playerRef.position.z + distanceFromPlayer), Quaternion.Euler(0, 180, 0));
+                    var b =Instantiate(train, new Vector3(-3, 0, playerRef.position.z + distanceFromPlayer), Quaternion.Euler(0, 180, 0));
+                    a.transform.parent = GameManager.Instance.spawnedTileParent;
+                    b.transform.parent = GameManager.Instance.spawnedTileParent;
+
                 }
                 i++;
             }

@@ -34,7 +34,7 @@ public class Car : MonoBehaviour
     void Update()
     {
         transform.Translate(0, 0, speed * Time.deltaTime);
-
+        
     }
 
     IEnumerator SpawnCoin()

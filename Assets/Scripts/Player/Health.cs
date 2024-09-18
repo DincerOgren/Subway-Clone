@@ -163,6 +163,13 @@ public class Health : MonoBehaviour
         }
 
     }
+
+    public void ResetDeadState()
+    {
+        isPlayerTwisted = false;
+        isInvincible = false;
+        isDead = false;
+    }
     private void EnterTwistedState()
     {
         isPlayerTwisted = true;

@@ -6,6 +6,7 @@ using Random = UnityEngine.Random;
 
 public class ChunkSpawner : MonoBehaviour
 {
+    public static ChunkSpawner Instance;
     [SerializeField] GameObject[] tiles;
 
     List<GameObject> spawnedChunks = new List<GameObject>();
@@ -15,6 +16,23 @@ public class ChunkSpawner : MonoBehaviour
 
     private void Start()
     {
+        StartCoroutine(Wait());
+        Instance = this;
+
+        if (Instance != null && Instance != this)
+        {
+            Destroy(this);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(this.gameObject);
+        //adddelay
+        //SpawnChunk();
+    }
+    
+    IEnumerator Wait()
+    {
+        yield return null;
         SpawnChunk();
     }
     private void OnTriggerEnter(Collider other)
@@ -37,7 +55,7 @@ public class ChunkSpawner : MonoBehaviour
         }
     }
 
-    private void SpawnChunk()
+    public void SpawnChunk()
     {
         print("SpawnChunk");
         var selectedChunk = ChooseRandomChunk();
@@ -53,6 +71,7 @@ public class ChunkSpawner : MonoBehaviour
         }
 
         var a = Instantiate(selectedChunk, new Vector3(0,0,transform.position.z + spawnOffset), Quaternion.identity);
+        print(a.name);
         a.transform.parent = GameManager.Instance.spawnedTileParent;
 
     }

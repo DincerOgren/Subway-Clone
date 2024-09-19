@@ -131,7 +131,7 @@ public class ChasingEnemy : MonoBehaviour
     void Chase()
     {
         if (!shouldChasePlayer) return;
-        print("InChase");
+       
         if (Vector3.Distance(transform.position, playerRef.transform.position) <= playerChaseThreshold && !isInThreshold && !isInSlowingState)
         {
             isInThreshold = true;

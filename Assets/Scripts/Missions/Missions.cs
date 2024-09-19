@@ -63,6 +63,9 @@ public class Mission
     public bool isDone;
     public int rewardX = 1;
 
+    // skipcost
+    // mission info ui
+    
     public bool CheckMission()
     {
         if(missionProgress == missionCap){

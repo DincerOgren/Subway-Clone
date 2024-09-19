@@ -7,9 +7,6 @@ using Random = UnityEngine.Random;
 
 public class Health : MonoBehaviour
 {
-    [Header("Health UI")]
-    [SerializeField] Transform healthContainer;
-    [SerializeField] GameObject healthImagePrefab;
 
     [Header("Health Variables")]
     [SerializeField] float maxHealth = 3;
@@ -21,12 +18,8 @@ public class Health : MonoBehaviour
     [SerializeField] TextMeshProUGUI endScore;
     [SerializeField] TextMeshProUGUI endHighScore;
 
-    [Header("Damage Flash")]
-    [SerializeField] float flashTime;
-    [SerializeField] Transform playerMaterialRef;
-    [SerializeField] Color flashColor = Color.white;
+
     [SerializeField] float invincibleTimeAfterDamage = 1f;
-    [SerializeField] float flashAmount = 1f;
     float invincibleTimer = Mathf.Infinity;
     Material _playerMat;
     bool isDead = false;
@@ -44,8 +37,17 @@ public class Health : MonoBehaviour
     public float twistedTime = 2f;
     public float _twistedTimer = Mathf.Infinity;
 
+    [Header("Hit Values")]
+    public float backwardsThreshold = 2f;
+    public float backwardMoveSpeed = 10f;
+    Vector3 hitPos;
 
-    ChasingEnemy enemyRef;
+
+
+    bool isRunFinished;
+
+    Animator _anim;
+    ChasingEnemy _enemyRef;
     bool _chaseStarted;
     //[Header("Knockback")]
     //[SerializeField] float knockBackForce = 10f;
@@ -57,18 +59,13 @@ public class Health : MonoBehaviour
     private void Awake()
     {
         playerMovement = GetComponent<PlayerMovement>();
-        enemyRef = GameObject.FindWithTag("Enemy").GetComponent<ChasingEnemy>();
+        _enemyRef = GameObject.FindWithTag("Enemy").GetComponent<ChasingEnemy>();
+        _anim = GetComponent<Animator>();
     }
 
     private void Start()
     {
         _currentHealth = maxHealth;
-
-        for (int i = 0; i < maxHealth; i++)
-        {
-            Instantiate(healthImagePrefab, healthContainer);
-        }
-        _playerMat = playerMaterialRef.GetComponent<SkinnedMeshRenderer>().material;
     }
 
     private void Update()
@@ -103,18 +100,18 @@ public class Health : MonoBehaviour
 
         if (!_chaseStarted)
         {
-            enemyRef.gameObject.SetActive(true);
+            _enemyRef.gameObject.SetActive(true);
 
-            enemyRef.StartChase(transform.position);
+            _enemyRef.StartChase(transform.position);
             _chaseStarted = true;
-        
+
         }
         if (_twistedTimer >= twistedTime)
         {
             isPlayerTwisted = false;
             // enemyRef.StartChase(false);
         }
-       
+
 
         //print("PLAYER TWISTEDDDDDD");
     }
@@ -164,24 +161,6 @@ public class Health : MonoBehaviour
 
     }
 
-    public void ResetDeadState()
-    {
-        isPlayerTwisted = false;
-        isInvincible = false;
-        isDead = false;
-    }
-    private void EnterTwistedState()
-    {
-        isPlayerTwisted = true;
-        _twistedTimer = 0;
-        // Start shaking the player
-        //StartCoroutine(ShakePlayer());
-
-        // Move the player back to the previous lane after the shake
-        playerMovement.MoveToPreviousLane();
-        //isPlayerTwisted = false;
-        //print("PLAYER TWISTEDDDDDD");
-    }
 
 
 
@@ -207,6 +186,23 @@ public class Health : MonoBehaviour
             EndErrorPeriod();
         }
     }
+    private void EnterTwistedState()
+    {
+        isPlayerTwisted = true;
+        _twistedTimer = 0;
+        // Start shaking the player
+        //StartCoroutine(ShakePlayer());
+
+        // Move the player back to the previous lane after the shake
+        playerMovement.MoveToPreviousLane();
+        //isPlayerTwisted = false;
+        //print("PLAYER TWISTEDDDDDD");
+    }
+
+
+
+
+
 
     private void StartErrorPeriod()
     {
@@ -227,10 +223,12 @@ public class Health : MonoBehaviour
         _errorTimer = 0f;
 
         Debug.Log("Player recovered from hit!");
+
         playerMovement.EnableSwipeDetectionDuringErrorPeriod(false); // Disable error period swipe detection
-        playerMovement.SetPlayerSpeed(oldSpeed); // Restore player speed
+        playerMovement.SetPlayerSpeed(oldSpeed);
         oldSpeed = 0f;
         isPlayerTwisted = true;
+
         EnterInvincibleState();
     }
 
@@ -243,29 +241,13 @@ public class Health : MonoBehaviour
     private void EndErrorPeriod()
     {
         isInErrorPeriod = false;
-        Debug.Log("End Of Error Period");
+        Debug.Log("End Of Error Period. Player dies");
         playerMovement.EnableSwipeDetectionDuringErrorPeriod(false); // Disable error period swipe detection
         playerMovement.SetPlayerSpeed(oldSpeed); // Restore player speed
         oldSpeed = 0f;
         Die();
     }
 
-    private void TakeDamage()
-    {
-        //startClean = true;
-        //_currentHealth--;
-        //invincibleTimer = 0;
-        ////StartCoroutine(KnockBack());
-        ////Knockback
-        //UpdateUI();
-        //if (_currentHealth < 1)
-        //{
-        //    Die();
-        //    return;
-        //}
-        //StartCoroutine(DamageFlash());
-
-    }
 
     //IEnumerator KnockBack()
     //{
@@ -286,26 +268,26 @@ public class Health : MonoBehaviour
     #region Damage Flash
 
 
-    private IEnumerator DamageFlash()
-    {
-        SetFlashColor();
-        while (invincibleTimer < invincibleTimeAfterDamage)
-        {
+    //private IEnumerator DamageFlash()
+    //{
+    //    SetFlashColor();
+    //    while (invincibleTimer < invincibleTimeAfterDamage)
+    //    {
 
-            float currentFlashAmount = (Mathf.Sin(flashAmount * Time.time) + 1) / 2;
-            //print(currentFlashAmount);
-            _playerMat.SetFloat("_FlashAmount", currentFlashAmount);
-            yield return null;
-        }
+    //        float currentFlashAmount = (Mathf.Sin(flashAmount * Time.time) + 1) / 2;
+    //        //print(currentFlashAmount);
+    //        _playerMat.SetFloat("_FlashAmount", currentFlashAmount);
+    //        yield return null;
+    //    }
 
-        _playerMat.SetFloat("_FlashAmount", 0);
+    //    _playerMat.SetFloat("_FlashAmount", 0);
 
-    }
+    //}
 
-    private void SetFlashColor()
-    {
-        _playerMat.SetColor("_FlashColor", flashColor);
-    }
+    //private void SetFlashColor()
+    //{
+    //    _playerMat.SetColor("_FlashColor", flashColor);
+    //}
 
 
     #endregion
@@ -314,15 +296,30 @@ public class Health : MonoBehaviour
         if (isDead) { return; }
 
         isDead = true;
+        playerMovement.SetPlayerSpeed(0);
 
         ScoreManager.instance.SaveScore();
         //Play death anim
 
+
+        if (!isRunFinished)
+        {
+            isRunFinished = true;
+            _anim.SetTrigger("Die");
+            StartCoroutine(GoBackwards());
+        }
+
+
         endScore.text = ScoreManager.instance.GetScore().ToString();
         endHighScore.text = ScoreManager.instance.GetHighScore().ToString();
 
-        inGameCanvas.gameObject.SetActive(false);
-        endGameCanvas.gameObject.SetActive(true);
+        //Catch Sequence
+
+
+
+
+        //inGameCanvas.gameObject.SetActive(false);
+        //endGameCanvas.gameObject.SetActive(true);
 
 
         ScoreManager.instance.ResetScore();
@@ -331,6 +328,29 @@ public class Health : MonoBehaviour
 
         GameStarter.Instance.ChangeCamera();
 
+        //Invoke(nameof(DieWithTime),1f);
+    }
+
+    IEnumerator GoBackwards()
+    {
+        hitPos = transform.position;
+        while (true)
+        {
+            if (Mathf.Abs(hitPos.z) - Mathf.Abs(transform.position.z) > backwardsThreshold)
+            {
+                break;
+            }
+
+
+            transform.position = Vector3.MoveTowards(transform.position, hitPos + Vector3.back * backwardsThreshold * 2, Time.deltaTime * backwardMoveSpeed);
+
+            yield return null;
+        }
+
+    }
+
+    private void DieWithTime()
+    {
         gameObject.SetActive(false);
     }
 
@@ -339,21 +359,20 @@ public class Health : MonoBehaviour
         _chaseStarted = false;
     }
 
-    private void UpdateUI()
-    {
-        foreach (Transform child in healthContainer)
-        {
-            Destroy(child.gameObject);
-        }
 
-        for (int i = 0; i < _currentHealth; i++)
-        {
-            Instantiate(healthImagePrefab, healthContainer);
-
-        }
-    }
     public bool IsPlayerDead()
     {
         return isDead;
     }
+
+
+
+    public void ResetDeadState()
+    {
+        isPlayerTwisted = false;
+        isInvincible = false;
+        isDead = false;
+        isRunFinished = false;
+    }
+
 }

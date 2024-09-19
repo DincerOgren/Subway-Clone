@@ -100,6 +100,7 @@ public class PlayerMovement : MonoBehaviour
     PlayerLineState _playerLineState;
     PlayerLineState _playerPrevLineState;
 
+
     [Header("Error Period")]
     bool detectSwipeForErrorPeriod;
 
@@ -269,9 +270,8 @@ public class PlayerMovement : MonoBehaviour
         _anim.SetBool("isGrounded", isGrounded);
         _anim.SetBool("isGameStarted", GameStarter.Instance.IsGameStarted());
         _anim.SetBool("isSkateboarding", _isSkating);
-
+        
     }
-
 
     #region Jump & Grounded
     private void CheckGrounded()

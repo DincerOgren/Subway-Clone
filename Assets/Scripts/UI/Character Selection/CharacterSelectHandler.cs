@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using UnityEngine;
 
 public class CharacterSelectHandler : MonoBehaviour
@@ -37,30 +38,62 @@ public class CharacterSelectHandler : MonoBehaviour
 
     private void OnEnable()
     {
+        CheckSelected();
         Actions.onSelectCharacters += SelectCharacter;
         Actions.onSelectButtonPressed += SelectPlayerModel;
         Actions.onCharacterHovered += SelectDisplayModel;
     }
 
+    private void OnDisable()
+    {
+        Actions.onSelectCharacters -= SelectCharacter;
+        Actions.onSelectButtonPressed -= SelectPlayerModel;
+        Actions.onCharacterHovered -= SelectDisplayModel;
+    }
+    void CheckSelected()
+    {
+        SelectButtons activeCharacter = FindSelected();
+
+        SelectCharacter(activeCharacter);
+        SelectDisplayModel(activeCharacter.modelRef.transform);
+    }
+    SelectButtons FindSelected()
+    {
+        foreach (var item in characters)
+        {
+            if (item.isSelected == true)
+            {
+                return item;
+            }
+        }
+
+
+        return null;
+    }
     public void SelectCharacter(SelectButtons v)
     {
         for (int i = 0; i < characters.Length; i++)
         {
             characters[i].selectedMark.SetActive(false);
-        }
 
+        }
+        
         v.selectedMark.SetActive(true);
+        v.CheckButtons();
+
     }
 
-    void SelectPlayerModel(Transform selectedModel)
+    void SelectPlayerModel(SelectButtons v)
     {
+        Transform selectedModel = v.modelRef.transform;
+
         foreach (var item in _playerModels)
         {
             item.SetActive(false);
-
             if (selectedModel.name == item.name)
             {
                 item.SetActive(true);
+                SetChoosenCharacter(v);
             }
         }
         
@@ -80,6 +113,16 @@ public class CharacterSelectHandler : MonoBehaviour
             }
         }
 
+    }
+
+    void SetChoosenCharacter(SelectButtons v)
+    {
+        for (int i = 0; i < characters.Length; i++)
+        {
+            characters[i].isSelected = false;
+        }
+
+        v.isSelected = true;
     }
 
     

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -40,6 +41,7 @@ public class GameManager : MonoBehaviour
     {
         var a= Instantiate(_planePrefab, planeParent);
         a.transform.position = Vector3.zero;
+        a.GetComponent<Plane>().ResetPlaneOffset();
     }
     public void ResetPlayerLocation()
     {
@@ -54,14 +56,22 @@ public class GameManager : MonoBehaviour
         SpawnStartTile();
 
         ResetPlayerLocation();
-
         ResetEnemy();
 
         GameStarter.Instance.RestartGame();
 
-        ChunkSpawner.Instance.SpawnChunk();
+        ChunkSpawner.Instance.SpawnChunk(true);
+
+        ResetPlayerSpeed();
+        // Reset animaton
+        // Reset speed
 
 
+    }
+
+    private void ResetPlayerSpeed()
+    {
+        _playerRef.GetComponent<PlayerMovement>().ResetPlayer();
     }
 
     void ResetEnemy()

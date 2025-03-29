@@ -55,6 +55,7 @@ public class GameStarter : MonoBehaviour
     {
         if (shouldStartGame && !isGameStarted)
         {
+            print("Start game");
             StartGame();
         }
     }

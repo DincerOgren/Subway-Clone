@@ -18,6 +18,7 @@ TagManager:
   - TrainSide
   - Enemy
   - ChunkEnd
+  - SkateModel
   layers:
   - Default
   - TransparentFX

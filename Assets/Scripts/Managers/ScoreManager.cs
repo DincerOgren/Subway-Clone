@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices.WindowsRuntime;
+using TMPro;
 using UnityEngine;
-
+using UnityEngine.UI;
 public class ScoreManager : MonoBehaviour
 {
     public static ScoreManager instance;
@@ -13,6 +14,8 @@ public class ScoreManager : MonoBehaviour
     public float scoreAddedPerTick = 2;
     public float scoreTickRate = .1f;
     public float scoreTimer = 0;
+
+    [SerializeField] TextMeshProUGUI scoreText;
 
     [Header("Power Up")]
     [SerializeField] float scoreMultiplier = 5f;
@@ -34,7 +37,7 @@ public class ScoreManager : MonoBehaviour
 
         scoreMultiplierData = PowerUpManager.instance.GetPowerUpData(PowerUpType.ScoreMultiplier);
         highScore = PlayerPrefs.GetFloat("HighScore", currentScore);
-
+        // Add Save System
 
         DontDestroyOnLoad(gameObject);
     }
@@ -59,11 +62,14 @@ public class ScoreManager : MonoBehaviour
 
         }
 
+        scoreText.text = "x" + scoreMultiplier.ToString();
+
         if (currentScore > highScore)
         {
             highScore = currentScore;
         }
 
+        
         scoreTimer += Time.deltaTime;
     }
 

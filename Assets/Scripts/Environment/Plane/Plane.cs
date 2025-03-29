@@ -14,6 +14,11 @@ public class Plane : MonoBehaviour
         planeOffset = (10 * transform.localScale.z) + transform.localPosition.z;
     }
 
+    public void ResetPlaneOffset()
+    {
+        planeOffset = (10 * transform.localScale.z) + transform.localPosition.z;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         

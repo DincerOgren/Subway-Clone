@@ -4,18 +4,44 @@ using UnityEngine;
 
 public class MissionCounter : MonoBehaviour
 {
-    
+    public static MissionCounter Instance;
 
-    void TrainHitCounter()
+    private void Awake()
     {
-        Missions.Instance.AddToMission(Missions.Instance.trainHitMission);
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("TrainSide") || collision.gameObject.CompareTag("TrainFront"))
+        if (Instance != null && Instance != this)
         {
-            TrainHitCounter();
+            Destroy(this.gameObject);
+            return;
         }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
+
+    public void TrainHitCounter()
+    {
+        Mission msn = MissionManager.Instance.GetMissionByName("TrainHitMission");
+        if(msn == null)
+        {
+            print("Coulnt find jump misson in list");
+        }
+        else
+            MissionManager.Instance.AddToMission(msn);
+    }
+    
+    public void JumpCounter()
+    {
+        MissionManager.Instance.AddToMission(MissionManager.Instance.GetMissionByName("JumpMission"));
+    }
+    public void RollCounter()
+    {
+        MissionManager.Instance.AddToMission(MissionManager.Instance.GetMissionByName("RollMission"));
+        print("ROLL ROLL ROLL");
+    }
+    //private void OnCollisionEnter(Collision collision)
+    //{
+    //    if (collision.gameObject.CompareTag("TrainSide") || collision.gameObject.CompareTag("TrainFront"))
+    //    {
+    //        TrainHitCounter();
+    //    }
+    //}
 }

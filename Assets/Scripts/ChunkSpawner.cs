@@ -10,7 +10,9 @@ public class ChunkSpawner : MonoBehaviour
     [SerializeField] GameObject[] tiles;
 
     List<GameObject> spawnedChunks = new List<GameObject>();
-    public float spawnOffset = 20;
+    public float spawnOffset = 100;
+    const float firstChunkOffset = 44.5f;
+
 
 
 
@@ -25,7 +27,7 @@ public class ChunkSpawner : MonoBehaviour
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(this.gameObject);
+        //DontDestroyOnLoad(this.gameObject);
         //adddelay
         //SpawnChunk();
     }
@@ -33,31 +35,33 @@ public class ChunkSpawner : MonoBehaviour
     IEnumerator Wait()
     {
         yield return null;
-        SpawnChunk();
+        SpawnChunk(true);
     }
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("ChunkEnd"))
         {
-            SpawnChunk();
+            print("pos=" + other.transform.position);
+            print("localPos = " + other.transform.localPosition);
+            SpawnChunk(false,other);
 
-            Transform parentTransform = other.transform.parent;
+            //Transform parentTransform = other.transform.parent;
 
-            if (parentTransform != null)
-            {
-                parentTransform.gameObject.SetActive(false);
-                Debug.Log("Parent objesi deaktif edildi: " + parentTransform.name);
-            }
-            else
-            {
-                Debug.Log("Bu objenin parent'ý yok: " + other.name);
-            }
+            //if (parentTransform != null)
+            //{
+            //    parentTransform.gameObject.SetActive(false);
+            //    Debug.Log("Parent objesi deaktif edildi: " + parentTransform.name);
+            //}
+            //else
+            //{
+            //    Debug.Log("Bu objenin parent'ý yok: " + other.name);
+            //}
         }
     }
 
-    public void SpawnChunk()
+    public void SpawnChunk(bool isFirstChunk=false,Collider other=null)
     {
-        print("SpawnChunk");
+        
         var selectedChunk = ChooseRandomChunk();
 
         if (CheckChunkExsistedInList(selectedChunk))
@@ -70,9 +74,20 @@ public class ChunkSpawner : MonoBehaviour
             ActivateAllObjectsInChunk(selectedChunk);
         }
 
-        var a = Instantiate(selectedChunk, new Vector3(0,0,transform.position.z + spawnOffset), Quaternion.identity);
-        print(a.name);
-        a.transform.parent = GameManager.Instance.spawnedTileParent;
+        if (isFirstChunk)
+        {
+            var a = Instantiate(selectedChunk, new Vector3(0, 0, transform.position.z + firstChunkOffset), Quaternion.identity);
+            print(a.name);
+            a.transform.parent = GameManager.Instance.spawnedTileParent;
+        }
+        else if (other != null) 
+        {
+            var a = Instantiate(selectedChunk, new Vector3(0, 0, other.transform.position.z + spawnOffset), Quaternion.identity);
+            print(a.name);
+            a.transform.parent = GameManager.Instance.spawnedTileParent;
+
+        }
+
 
     }
 

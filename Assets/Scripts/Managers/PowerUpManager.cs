@@ -21,7 +21,7 @@ public class PowerUpManager : MonoBehaviour
     public Transform powerUpUIContainer;
     public PowerUpUI powerUpUIPrefab;
 
-
+    bool stopPowerupImmediatly;
     private void Awake()
     {
         instance = this;
@@ -87,6 +87,12 @@ public class PowerUpManager : MonoBehaviour
     {
         while (true)
         {
+
+            if (stopPowerupImmediatly)
+            {
+                break;
+            }
+
             if (data.Timer>=data.Duration)
             {
                 break;
@@ -99,6 +105,11 @@ public class PowerUpManager : MonoBehaviour
         }
 
         ResetPowerUp(data);
+    }
+
+    public void StopPowerupImmediate()
+    {
+        stopPowerupImmediatly = true;
     }
 
     private void ResetPowerUp(PowerUp data)
@@ -123,6 +134,8 @@ public class PowerUpManager : MonoBehaviour
                 magnetPoint.gameObject.SetActive(false);
             }
         }
+
+        stopPowerupImmediatly = false;
     }
 
 

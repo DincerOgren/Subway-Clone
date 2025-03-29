@@ -40,7 +40,7 @@ public class ChasingEnemy : MonoBehaviour
     public bool isCatchedPlayer;
     public float playerChaseThreshold = 3f;
 
-    public float chaseDuration = 3f;
+    public float chaseDuration = 4f;
     public float chaseTimer = Mathf.Infinity;
 
     public float disappearThreshold = 10f;
@@ -60,6 +60,11 @@ public class ChasingEnemy : MonoBehaviour
     [Header("Spawn Variables")]
     public float distanceToStop = 2.5f;
     public float teleportDistance = 10f;
+
+    [Header("Catch Variables")]
+    public float catchThreshold = 1;
+    bool shouldStop = false;
+    public float backwardsMoveSpeed = 10;
 
     public float actionDelay = .5f;
     float _delayTimer = Mathf.Infinity;
@@ -307,9 +312,11 @@ public class ChasingEnemy : MonoBehaviour
 
     void Move()
     {
+        if (shouldStop) return;
+
         if (isStartedChasing)
         {
-            print("moving = ChaseSpeed");
+            //print("moving = ChaseSpeed");
             moveDir.z = _catchUpSpeed;
         }
         else if (isInThreshold)
@@ -426,6 +433,33 @@ public class ChasingEnemy : MonoBehaviour
 
     }
 
+    public void PlayCathAnim()
+    {
+        anim.SetTrigger("Catch");
+        shouldStop = true;
+        //  transform.position =  - Vector3.back * catchThreshold;
+        Vector3 posRef = transform.position;
+        StartCoroutine(GoBackwards(posRef));
+        _rb.velocity = Vector3.zero;
+    }
+
+    IEnumerator GoBackwards(Vector3 hit)
+    {
+        Vector3 hitPos = transform.position;
+        while (true)
+        {
+            if (Mathf.Abs(hitPos.z) - Mathf.Abs(transform.position.z) > catchThreshold)
+            {
+                break;
+            }
+
+
+            transform.position = Vector3.MoveTowards(transform.position, hitPos + Vector3.back * catchThreshold * 2, Time.deltaTime * backwardsMoveSpeed);
+
+            yield return null;
+        }
+
+    }
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;

@@ -42,13 +42,22 @@ public class Health : MonoBehaviour
     public float backwardMoveSpeed = 10f;
     Vector3 hitPos;
 
-
+    [Header("Train Raycasts")]
+    [SerializeField] Transform footRaycastTransform;
+    [SerializeField] Transform headRaycastTransform;
+    [SerializeField] float footRaycastDist;
+    [SerializeField] float headRaycastDist;
+    [SerializeField] LayerMask trainLayer;
+    [SerializeField] float trainTopY = 3.1f;
+    [SerializeField] float frontBuffer = 1.5f;
 
     bool isRunFinished;
 
     Animator _anim;
     ChasingEnemy _enemyRef;
     bool _chaseStarted;
+    SkateHandler _skateHandler;
+    
     //[Header("Knockback")]
     //[SerializeField] float knockBackForce = 10f;
     //[SerializeField] float knockBackSpeed = 20f;
@@ -61,6 +70,7 @@ public class Health : MonoBehaviour
         playerMovement = GetComponent<PlayerMovement>();
         _enemyRef = GameObject.FindWithTag("Enemy").GetComponent<ChasingEnemy>();
         _anim = GetComponent<Animator>();
+        _skateHandler = GetComponent<SkateHandler>();
     }
 
     private void Start()
@@ -70,6 +80,10 @@ public class Health : MonoBehaviour
 
     private void Update()
     {
+        Debug.DrawRay(footRaycastTransform.position, footRaycastDist * transform.forward, Color.red, 10000f);
+
+        Debug.DrawRay(headRaycastTransform.position, headRaycastDist * transform.forward, Color.blue, 10000f);
+
         //if (Flags.isTakingDamage)
         //    startClean = true;
 
@@ -79,6 +93,8 @@ public class Health : MonoBehaviour
         //    GetComponent<DamageCollisions>().ClearArray();
         //}
         //Flags.isTakingDamage = !(invincibleTimer > invincibleTimeAfterDamage);
+
+        TryJumpRecoverOnTrainFrontHit();
         UpdateTimers();
 
         CheckError();
@@ -87,7 +103,49 @@ public class Health : MonoBehaviour
 
     }
 
+    private void TryJumpRecoverOnTrainFrontHit()
+    {
+        if (CheckFootRaycast() && CheckHeadRaycast())
+        {
+            Debug.LogWarning("Both true");
+        }
+        else if (CheckFootRaycast() && !CheckHeadRaycast())
+        {
+            Debug.LogWarning("Yukarý ýýsýnla abimi");
+            Vector3 newPos = transform.position;
+            newPos.y = trainTopY;
+            newPos.z += frontBuffer;
+            transform.position = newPos;
+            EnterTwistedState();
+        }
+    }
 
+    bool CheckFootRaycast()
+    {
+        if (Physics.Raycast(footRaycastTransform.position,transform.forward,out RaycastHit hitInfo, footRaycastDist, trainLayer))
+        {
+            var hittedObject = hitInfo.transform;
+            if (hittedObject.CompareTag("TrainFront") || hittedObject.CompareTag("ObstacleGround"))
+            {
+                print("hit train" + hittedObject.name);
+                return true;
+            }
+        }
+
+        return false;
+    }
+    bool CheckHeadRaycast()
+    {
+        if (Physics.Raycast(headRaycastTransform.position,transform.forward,out RaycastHit hitInfo, headRaycastDist, trainLayer))
+        {
+            
+                //if hit then no jump
+            return true;
+            
+        }
+
+        return false;
+    }
 
     private void UpdateTimers()
     {
@@ -113,7 +171,7 @@ public class Health : MonoBehaviour
         }
 
 
-        //print("PLAYER TWISTEDDDDDD");
+       
     }
 
     private void CheckInvincible()
@@ -133,20 +191,33 @@ public class Health : MonoBehaviour
             return;
         }
 
+        Debug.LogWarning("---------------------------------");
         if (collision.collider.CompareTag("TrainFront") || collision.collider.CompareTag("Obstacle"))
         {
             // If the player hits the front, they die immediately
+
+
+
             if (!isInErrorPeriod)
             {
                 StartErrorPeriod();
             }
             else
             {
-                Die();
+                StartCoroutine(Die());
             }
         }
         else if (collision.collider.CompareTag("TrainSide"))
         {
+
+            //if (_skateHandler.IsSkating())
+            //{
+            //    //Blow and return;
+            //    //Explosion
+            //}
+
+
+
             // If the player hits the side, enter the twisted state
             if (!isPlayerTwisted)
             {
@@ -154,8 +225,14 @@ public class Health : MonoBehaviour
             }
             else
             {
+                if (_skateHandler.IsSkating())
+                {
+                    _skateHandler.OnSkateContact();
+                    return;
+                }
                 // If already twisted, the player dies
-                Die();
+
+                StartCoroutine(Die(true));
             }
         }
 
@@ -176,9 +253,13 @@ public class Health : MonoBehaviour
             // Continuously check for swipe during error period
             if (playerMovement.CheckSwipeDuringErrorPeriod())
             {
+                print("Player swipe true return");
+
                 RecoverFromHit();
                 return;
             }
+            else
+                print("Player not recover from hit");
         }
 
         if (_errorTimer < 0)
@@ -194,7 +275,7 @@ public class Health : MonoBehaviour
         //StartCoroutine(ShakePlayer());
 
         // Move the player back to the previous lane after the shake
-        playerMovement.MoveToPreviousLane();
+        playerMovement.MoveToPreviousLine();
         //isPlayerTwisted = false;
         //print("PLAYER TWISTEDDDDDD");
     }
@@ -244,8 +325,9 @@ public class Health : MonoBehaviour
         Debug.Log("End Of Error Period. Player dies");
         playerMovement.EnableSwipeDetectionDuringErrorPeriod(false); // Disable error period swipe detection
         playerMovement.SetPlayerSpeed(oldSpeed); // Restore player speed
+        
         oldSpeed = 0f;
-        Die();
+        StartCoroutine(Die());
     }
 
 
@@ -291,35 +373,88 @@ public class Health : MonoBehaviour
 
 
     #endregion
-    private void Die()
+    //private void Die(bool deathFromTwisted=false)
+    //{
+    //    if (isDead) { return; }
+
+    //    if (deathFromTwisted)
+    //    {
+    //        Debug.LogWarning("-----------------------------------------------");
+    //        playerMovement.InstantMoveToPreviousLine();
+    //    }
+
+    //    isDead = true;
+    //    playerMovement.SetPlayerSpeed(0);
+    //    playerMovement.ResetVelocity();
+
+    //    ScoreManager.instance.SaveScore();
+    //    //Play death anim
+
+
+    //    if (!isRunFinished && !deathFromTwisted)
+    //    {
+    //        isRunFinished = true;
+    //        _anim.SetTrigger("Die");
+    //        StartCoroutine(GoBackwards());
+    //    }
+    //    else
+    //        _anim.SetTrigger("Die");
+
+
+    //    endScore.text = ScoreManager.instance.GetScore().ToString();
+    //    endHighScore.text = ScoreManager.instance.GetHighScore().ToString();
+
+    //    //Catch Sequence
+
+
+    //    _enemyRef.PlayCathAnim();
+
+    //    print("YOU DEAD");
+
+    //    Invoke(nameof(EndGameStuffs),2f);
+
+    //    //Invoke(nameof(DieWithTime),1f); ?
+    //}
+    private IEnumerator Die(bool deathFromTwisted = false)
     {
-        if (isDead) { return; }
+        if (isDead) yield break;
+
+        if (deathFromTwisted)
+        {
+            Debug.LogWarning("Twisted ölüm – önce geri git");
+            yield return StartCoroutine(playerMovement.InstantMoveToPreviousLine());
+        }
 
         isDead = true;
         playerMovement.SetPlayerSpeed(0);
+        playerMovement.ResetVelocity();
 
         ScoreManager.instance.SaveScore();
-        //Play death anim
 
-
-        if (!isRunFinished)
+        if (!isRunFinished && !deathFromTwisted)
         {
             isRunFinished = true;
             _anim.SetTrigger("Die");
-            StartCoroutine(GoBackwards());
+            yield return StartCoroutine(GoBackwards()); // varsa
         }
-
+        else
+        {
+            _anim.SetTrigger("Die");
+        }
 
         endScore.text = ScoreManager.instance.GetScore().ToString();
         endHighScore.text = ScoreManager.instance.GetHighScore().ToString();
 
-        //Catch Sequence
+        _enemyRef.PlayCathAnim();
 
+        Debug.Log("YOU DEAD");
 
-
-
-        //inGameCanvas.gameObject.SetActive(false);
-        //endGameCanvas.gameObject.SetActive(true);
+        Invoke(nameof(EndGameStuffs), 2f);
+    }
+    void EndGameStuffs()
+    {
+        inGameCanvas.gameObject.SetActive(false);
+        endGameCanvas.gameObject.SetActive(true);
 
 
         ScoreManager.instance.ResetScore();
@@ -328,9 +463,12 @@ public class Health : MonoBehaviour
 
         GameStarter.Instance.ChangeCamera();
 
-        //Invoke(nameof(DieWithTime),1f);
+        // Save mission progress
+        // save coins
+        // save scores 
+        // save collectibles
+        // maybe with actions so it doesnt depend on anything?
     }
-
     IEnumerator GoBackwards()
     {
         hitPos = transform.position;

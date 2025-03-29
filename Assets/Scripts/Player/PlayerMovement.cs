@@ -6,7 +6,10 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] float playerForwardSpeed = 5f;
+
+    [SerializeField] bool controlWithKeyboard = true;
+    [SerializeField] float playerForwardSpeed = 8f;
+    [SerializeField] float defaultForwardSpeed= 8f;
     [SerializeField] float maxPlayerSpeed = 15f;
     [SerializeField] float slopeSpeedMultiplier = 1.2f;
     [SerializeField] float animationSpeedMultiplier = 1f;
@@ -14,10 +17,14 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField] Transform leftLine, rightLine, middleLine;
     [SerializeField] float lineChangeSpeed = 5f;
+    [SerializeField] float instantLineChangeSpeed = 15f;
 
+    // DELETE LATER
+    public bool onSlope = false;
 
     //FLAG
     public bool isTakingDamage = false;
+    private bool isInstantMoving = false;
 
     [Header("Jump")]
     public float jumpForce = 9f;
@@ -41,7 +48,7 @@ public class PlayerMovement : MonoBehaviour
     public float originalHeight;
     public Vector3 originalCenter;
     public bool isRolling;
-
+    bool assignRoutine = false;
     [Header("Slopes")]
 
     [SerializeField] float slopeRaycastDist = .1f;
@@ -74,7 +81,7 @@ public class PlayerMovement : MonoBehaviour
     bool _shouldUseSkate;
     private float lastTapTime = 0f;
     private int tapCount = 0;
-
+    SkateHandler _skateHandler;
 
 
     [Header("PowerUp Variables")]
@@ -112,6 +119,7 @@ public class PlayerMovement : MonoBehaviour
         _anim = GetComponent<Animator>();
         _health = GetComponent<Health>();
         enemy = GameObject.FindWithTag("Enemy").GetComponent<ChasingEnemy>();
+        _skateHandler = GetComponent<SkateHandler>();
     }
     void Start()
     {
@@ -123,13 +131,20 @@ public class PlayerMovement : MonoBehaviour
 
         rollCoroutine = StartCoroutine(RollSequence());
         StopRoll();
+        assignRoutine = true;
     }
 
     void Update()
     {
+        //Delete late
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            OnDoubleTap();
+        }
         if (GameStarter.Instance.IsGameStarted())
         {
-            print("game Started");
+            onSlope = OnSlope();
+            //print("game Started");
             HandleTouchInput();
             IncreaseSpeed();
             //CheckJump();
@@ -138,17 +153,15 @@ public class PlayerMovement : MonoBehaviour
             CheckSlopeDir();
             CheckGrounded();
             //HandleLines();
-            UpdateAnimator();
             CheckRotation();
-            HandleSkate();
-            print("player speed = " + playerForwardSpeed);
+            //HandleSkate();
+            // print("player speed = " + playerForwardSpeed);
         }
         else
         {
             print("game not started");
-            print("player speed is not = " + playerForwardSpeed);
-
         }
+        UpdateAnimator();
         rotateTimer += Time.deltaTime;
 
 
@@ -158,8 +171,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        print("Speed "+ moveDir);
-        if (!GameStarter.Instance.IsGameStarted()) 
+        //print("Speed "+ moveDir);
+        if (!GameStarter.Instance.IsGameStarted())
         {
             moveDir = Vector3.zero;
             return;
@@ -167,13 +180,12 @@ public class PlayerMovement : MonoBehaviour
         if (_health.IsPlayerDead()) { return; }
 
 
-        print("in fixed");
+        //print("in fixed");
         ChangeLine();
 
         moveDir.z = playerForwardSpeed;
         if (OnSlope())
         {
-            float currentSpeed = _rb.velocity.magnitude;
             moveDir.y = 0;
             var newMovdir = GetSlopeMoveDirection();
             //newMovdir.y *= currentSpeed * slopeSpeedMultiplier;
@@ -191,17 +203,7 @@ public class PlayerMovement : MonoBehaviour
     #region Roll
     private void CheckRoll()
     {
-        if (Input.GetKeyDown(rollKey) && !isRolling)
-        {
-            isRolling = true;
-            _anim.SetTrigger("Roll");
-            if (enemy.isActiveAndEnabled)
-            {
-                enemy.Roll();
-            }
-            rollCoroutine = StartCoroutine(RollSequence());
-
-        }
+        
 
         if (isRolling && !isGrounded)
         {
@@ -215,8 +217,10 @@ public class PlayerMovement : MonoBehaviour
 
     IEnumerator RollSequence()
     {
-        _collider.height = rollCollisionHeight;
+        if (assignRoutine)
+            MissionCounter.Instance.RollCounter();
 
+        _collider.height = rollCollisionHeight;
 
         float heightDifference = originalHeight - rollCollisionHeight;
         Vector3 newCenter = originalCenter - new Vector3(0, heightDifference / 2f, 0);
@@ -269,8 +273,7 @@ public class PlayerMovement : MonoBehaviour
         _anim.SetBool("isJumping", isJumping);
         _anim.SetBool("isGrounded", isGrounded);
         _anim.SetBool("isGameStarted", GameStarter.Instance.IsGameStarted());
-        _anim.SetBool("isSkateboarding", _isSkating);
-        
+
     }
 
     #region Jump & Grounded
@@ -318,7 +321,6 @@ public class PlayerMovement : MonoBehaviour
 
     private void Jump()
     {
-
         if (PowerUpManager.instance.GetPowerUpData(PowerUpType.PowerBoots).IsActive)
         {
             moveDir.y = jumpForce * _powerBootsJumpMultiplier;
@@ -336,8 +338,10 @@ public class PlayerMovement : MonoBehaviour
             print("EnemyShouldJump");
             enemy.StartJump(moveDir.y);
         }
+
         _anim.SetTrigger("Jump");
         _coyoteTimeTimer = coyoteTime;
+        MissionCounter.Instance.JumpCounter();
 
         jumpQueued = false;
     }
@@ -373,6 +377,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.touchCount > 0)
         {
+            print("in swiptte detection");
             Touch touch = Input.GetTouch(0);
 
             switch (touch.phase)
@@ -388,9 +393,21 @@ public class PlayerMovement : MonoBehaviour
                 case TouchPhase.Ended:
                     endTouchPosition = touch.position;
 
-                    if (DetectSwipeInErrorPeriod()) // Check if the swipe is valid for recovery
+                    if (_skateHandler.IsSkating()) // Check if the swipe is valid for recovery
                     {
+                        //Maybe jump too?
+
+                        _skateHandler.OnSkateContact();
                         return true; // Valid swipe detected, player should recover
+                    }
+                    else if (DetectSwipeInErrorPeriod())
+                    {
+
+
+                        
+
+                        return true;
+
                     }
                     break;
             }
@@ -399,11 +416,6 @@ public class PlayerMovement : MonoBehaviour
         return false;
     }
 
-    public void StartMovingPrevLine()
-    {
-        //StartCoroutine(ShakePlayer());
-        //StartCoroutine(MoveToPreviousLane());
-    }
 
     private IEnumerator ShakePlayer()
     {
@@ -427,7 +439,67 @@ public class PlayerMovement : MonoBehaviour
         // After shaking, restore the original position
         playerModel.position = originalPosition;
     }
-    public void MoveToPreviousLane()
+
+
+    public IEnumerator InstantMoveToPreviousLine()
+    {
+        isInstantMoving = true;
+
+        while (true)
+        {
+
+            if (Mathf.Approximately(_lineEndPos.x, transform.position.x))
+            {
+                break;
+            }
+
+
+            if (_playerPrevLineState == PlayerLineState.middleLine && _playerLineState == PlayerLineState.rightLine)
+            {
+                TurnLeftOnRight();
+
+                Vector3 temp = transform.position;
+                temp.x = Mathf.MoveTowards(temp.x, _lineEndPos.x, lineChangeSpeed * Time.deltaTime);
+                transform.position = temp;
+
+            }
+            //TurnLeftOnMiddle
+            else if (_playerPrevLineState == PlayerLineState.leftLine && _playerLineState == PlayerLineState.middleLine)
+            {
+                TurnLeftOnMiddle();
+
+                Vector3 temp = transform.position;
+                temp.x = Mathf.MoveTowards(temp.x, _lineEndPos.x, lineChangeSpeed * Time.deltaTime);
+                transform.position = temp;
+
+            }
+            //TurnRightOnLeft
+            else if (_playerPrevLineState == PlayerLineState.middleLine && _playerLineState == PlayerLineState.leftLine)
+            {
+                TurnRightOnLeft();
+
+                Vector3 temp = transform.position;
+                temp.x = Mathf.MoveTowards(temp.x, _lineEndPos.x, lineChangeSpeed * Time.deltaTime);
+                transform.position = temp;
+
+            }
+            //TurnRightOnMiddle
+            else if (_playerPrevLineState == PlayerLineState.rightLine && _playerLineState == PlayerLineState.middleLine)
+            {
+                TurnRightOnMiddle();
+
+                Vector3 temp = transform.position;
+                temp.x = Mathf.MoveTowards(temp.x, _lineEndPos.x, lineChangeSpeed * Time.deltaTime);
+                transform.position = temp;
+            }
+
+            yield return null;
+        }
+
+        isInstantMoving = false;
+    }
+    
+    public void MoveToPreviousLine()
     {
         //yield return new WaitForSeconds(0.5f); // Wait for the shake to finish
 
@@ -454,25 +526,7 @@ public class PlayerMovement : MonoBehaviour
 
 
     }
-    private void eeeer()
-    {
-        _lineStartPos = transform.position;
-        _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
-
-
-        _playerPrevLineState = PlayerLineState.rightLine;
-        _playerLineState = PlayerLineState.middleLine;
-        //anim play
-        StopRoll();
-
-        HandleCharacterTurns(false);
-        //_anim.SetTrigger("TurnLeft");
-
-        if (isTurning)
-        {
-            rotateTimer = 0;
-        }
-    }
+    
     private bool DetectSwipeInErrorPeriod()
     {
         float swipeDistanceX = Mathf.Abs(endTouchPosition.x - startTouchPosition.x);
@@ -480,17 +534,22 @@ public class PlayerMovement : MonoBehaviour
 
         if (swipeDistanceX > swipeThreshold && swipeDistanceX > swipeDistanceY)
         {
+            print("swipe Detected ");
             if (endTouchPosition.x < startTouchPosition.x)
             {
                 // Swipe Left
+                print("in left");
                 return CanSwipeLeft();
             }
             else if (endTouchPosition.x > startTouchPosition.x)
             {
+                print("in right");
+
                 // Swipe Right
                 return CanSwipeRight();
             }
         }
+        print("swipe not Detected ");
 
 
         return false; // No valid swipe detected
@@ -501,8 +560,11 @@ public class PlayerMovement : MonoBehaviour
         // If the player is in the leftmost lane, they can't swipe left
         if (_playerLineState == PlayerLineState.leftLine)
         {
+            print("left false ");
+
             return false; // Invalid swipe
         }
+        print("Return true from left");
 
         // Otherwise, they can swipe left
         return true;
@@ -511,11 +573,13 @@ public class PlayerMovement : MonoBehaviour
     private bool CanSwipeRight()
     {
         // If the player is in the rightmost lane, they can't swipe right
-        if (_playerLineState == PlayerLineState.rightLine)
+        if (_playerLineState == PlayerLineState.rightLine && _playerPrevLineState==PlayerLineState.rightLine)
         {
+            print("right false ");
             return false; // Invalid swipe
         }
 
+        print("Return true from right");
         // Otherwise, they can swipe right
         return true;
     }
@@ -581,6 +645,8 @@ public class PlayerMovement : MonoBehaviour
 
         //}
 
+        if (isInstantMoving) return;
+             
         if (_playerPrevLineState == PlayerLineState.middleLine && _playerLineState == PlayerLineState.leftLine)
         {
             Vector3 temp = transform.position;
@@ -629,103 +695,107 @@ public class PlayerMovement : MonoBehaviour
         }
 
     }
-    private void HandleLines()
-    {
-        //Turn Left on middle line
-        if (_playerLineState == PlayerLineState.middleLine && Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            _lineStartPos = transform.position;
+    //private void HandleLines()
+    //{
+    //    //Turn Left on middle line
+    //    if (_playerLineState == PlayerLineState.middleLine && Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
+    //    {
+    //        _lineStartPos = transform.position;
 
-            _lineEndPos = new Vector3(leftLine.position.x, transform.position.y, transform.position.z);
-
-
-            _playerPrevLineState = PlayerLineState.middleLine;
-            _playerLineState = PlayerLineState.leftLine;
-            //anim play
-
-            StopRoll();
-            HandleCharacterTurns(false);
-            // _anim.SetTrigger("TurnLeft");
-
-            if (isTurning)
-            {
-                rotateTimer = 0;
-            }
-        }
-
-        //Turn Right on middle line
-        else if (_playerLineState == PlayerLineState.middleLine && Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
-        {
+    //        _lineEndPos = new Vector3(leftLine.position.x, transform.position.y, transform.position.z);
 
 
-            _lineStartPos = transform.position;
-            _lineEndPos = new Vector3(rightLine.position.x, transform.position.y, transform.position.z);
+    //        _playerPrevLineState = PlayerLineState.middleLine;
+    //        _playerLineState = PlayerLineState.leftLine;
+    //        //anim play
+
+    //        StopRoll();
+    //        HandleCharacterTurns(false);
+    //        // _anim.SetTrigger("TurnLeft");
+
+    //        if (isTurning)
+    //        {
+    //            rotateTimer = 0;
+    //        }
+    //    }
+
+    //    //Turn Right on middle line
+    //    else if (_playerLineState == PlayerLineState.middleLine && Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+    //    {
+
+
+    //        _lineStartPos = transform.position;
+    //        _lineEndPos = new Vector3(rightLine.position.x, transform.position.y, transform.position.z);
 
 
 
-            _playerPrevLineState = PlayerLineState.middleLine;
-            _playerLineState = PlayerLineState.rightLine;
-            //anim play
-            StopRoll();
+    //        _playerPrevLineState = PlayerLineState.middleLine;
+    //        _playerLineState = PlayerLineState.rightLine;
+    //        //anim play
+    //        StopRoll();
 
-            HandleCharacterTurns(true);
-            //    _anim.SetTrigger("TurnRight");
+    //        HandleCharacterTurns(true);
+    //        //    _anim.SetTrigger("TurnRight");
 
-            if (isTurning)
-            {
-                rotateTimer = 0;
-            }
+    //        if (isTurning)
+    //        {
+    //            rotateTimer = 0;
+    //        }
 
-        }
-        //Turn right on left line
-        else if (_playerLineState == PlayerLineState.leftLine && Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
-        {
-
-
-            _lineStartPos = transform.position;
-            _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
+    //    }
+    //    //Turn right on left line
+    //    else if (_playerLineState == PlayerLineState.leftLine && Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+    //    {
 
 
-            _playerPrevLineState = PlayerLineState.leftLine;
-            _playerLineState = PlayerLineState.middleLine;
-            //anim play
-            StopRoll();
-
-            HandleCharacterTurns(true);
-            //    _anim.SetTrigger("TurnRight");
-            if (isTurning)
-            {
-                rotateTimer = 0;
-            }
-        }
-        //Turn left on right line
-        else if (_playerLineState == PlayerLineState.rightLine && Input.GetKeyDown(KeyCode.A))
-        {
+    //        _lineStartPos = transform.position;
+    //        _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
 
 
-            _lineStartPos = transform.position;
-            _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
+    //        _playerPrevLineState = PlayerLineState.leftLine;
+    //        _playerLineState = PlayerLineState.middleLine;
+    //        //anim play
+    //        StopRoll();
+
+    //        HandleCharacterTurns(true);
+    //        //    _anim.SetTrigger("TurnRight");
+    //        if (isTurning)
+    //        {
+    //            rotateTimer = 0;
+    //        }
+    //    }
+    //    //Turn left on right line
+    //    else if (_playerLineState == PlayerLineState.rightLine && Input.GetKeyDown(KeyCode.A))
+    //    {
 
 
-            _playerPrevLineState = PlayerLineState.rightLine;
-            _playerLineState = PlayerLineState.middleLine;
-            //anim play
-            StopRoll();
-
-            HandleCharacterTurns(false);
-            //_anim.SetTrigger("TurnLeft");
-
-            if (isTurning)
-            {
-                rotateTimer = 0;
-            }
-
-        }
+    //        _lineStartPos = transform.position;
+    //        _lineEndPos = new Vector3(middleLine.position.x, transform.position.y, transform.position.z);
 
 
-    }
+    //        _playerPrevLineState = PlayerLineState.rightLine;
+    //        _playerLineState = PlayerLineState.middleLine;
+    //        //anim play
+    //        StopRoll();
+
+    //        HandleCharacterTurns(false);
+    //        //_anim.SetTrigger("TurnLeft");
+
+    //        if (isTurning)
+    //        {
+    //            rotateTimer = 0;
+    //        }
+
+    //    }
+
+
+    //}
     private void HandleTouchInput()
     {
+        if (controlWithKeyboard)
+        {
+            DetectSwipe();
+        }
 
         if (Input.touchCount > 0)
         {
@@ -757,7 +827,81 @@ public class PlayerMovement : MonoBehaviour
         float swipeDistanceX = Mathf.Abs(endTouchPosition.x - startTouchPosition.x);
         float swipeDistanceY = Mathf.Abs(endTouchPosition.y - startTouchPosition.y);
 
-        if (swipeDistanceX > swipeThreshold && swipeDistanceX > swipeDistanceY)
+
+        // Delete later
+        if (controlWithKeyboard)
+        {
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                jumpQueued = false;
+                //turn left
+                //Turn Left on middle line
+                if (_playerLineState == PlayerLineState.middleLine)
+                {
+                    TurnLeftOnMiddle();
+                }
+                //Turn left on right line
+                else if (_playerLineState == PlayerLineState.rightLine)
+                {
+                    TurnLeftOnRight();
+
+                }
+            }
+            else if (Input.GetKeyDown(KeyCode.D))
+            {
+                jumpQueued = false;
+
+                //Turn Right on middle line
+                if (_playerLineState == PlayerLineState.middleLine)
+                {
+                    TurnRightOnMiddle();
+
+                }
+                //Turn right on left line
+                else if (_playerLineState == PlayerLineState.leftLine)
+                {
+                    TurnRightOnLeft();
+                }
+
+            }
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+
+                if ((isGrounded || _coyoteTimeTimer <= coyoteTime) && !isJumping)
+                {
+                    isJumping = true;
+                    StopRoll();
+                    Jump();
+                }
+                else if (!isGrounded && !jumpQueued)
+                {
+                    jumpQueued = true;
+                    Debug.Log("Jump queued.");
+                }
+
+            }
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                jumpQueued = false;
+
+                if (!isRolling)
+                {
+                    isRolling = true;
+                    _anim.SetTrigger("Roll");
+                    rollCoroutine = StartCoroutine(RollSequence());
+
+                }
+
+                if (isRolling && !isGrounded)
+                {
+                    _rb.AddForce(Vector3.down * rollDownForce, ForceMode.Acceleration);
+                }
+            }
+
+        }
+
+        else if (swipeDistanceX > swipeThreshold && swipeDistanceX > swipeDistanceY)
         {
             if (endTouchPosition.x < startTouchPosition.x)
             {
@@ -971,44 +1115,50 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
-    private void HandleSkate()
-    {
-        if (_shouldUseSkate && !_isSkating)
-        {
-            if (!PlayerCollectibleManager.instance.CheckSkate())
-            {
-                return;
-            }
-            //isSkate
-            skateTimer = 0;
-            _shouldUseSkate = false;
-            StartSkate();
-        }
+    //Delete  later old skate script
+
+    //public bool IsSkating()
+    //{
+    //    return _isSkating;
+    //}
+    //private void HandleSkate()
+    //{
+    //    if (_shouldUseSkate && !_isSkating)
+    //    {
+    //        if (!PlayerCollectibleManager.instance.CheckSkate())
+    //        {
+    //            return;
+    //        }
+    //        //isSkate
+    //        skateTimer = 0;
+    //        _shouldUseSkate = false;
+    //        StartSkate();
+    //    }
 
 
-        if (skateTimer > totalSkateTime)
-        {
-            if (playerModel.localPosition != Vector3.zero)
-            {
-                playerModel.localPosition = Vector3.zero;
-                skate.SetActive(false);
-                _isSkating = false;
-            }
+    //    if (skateTimer > totalSkateTime)
+    //    {
+    //        if (playerModel.localPosition != Vector3.zero)
+    //        {
+    //            playerModel.localPosition = Vector3.zero;
+    //            skate.SetActive(false);
+    //            _isSkating = false;
+    //        }
 
-        }
-        skateTimer += Time.deltaTime;
+    //    }
+    //    skateTimer += Time.deltaTime;
 
-    }
+    //}
 
-    private void StartSkate()
-    {
-        PlayerCollectibleManager.instance.UseSkate();
-        _isSkating = true;
-        playerModel.localPosition = skatingModelOffset;
-        skate.SetActive(true);
-        PowerUpManager.instance.TakePowerUp(skateData);
+    //private void StartSkate()
+    //{
+    //    PlayerCollectibleManager.instance.UseSkate();
+    //    _isSkating = true;
+    //    playerModel.localPosition = skatingModelOffset;
+    //    skate.SetActive(true);
+    //    PowerUpManager.instance.TakePowerUp(skateData);
 
-    }
+    //}
 
     private void DetectDoubleTap()
     {
@@ -1061,9 +1211,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnDoubleTap()
     {
-        Debug.Log("Double tap action triggered!");
-        if (!_isSkating)
-            _shouldUseSkate = true;
+       
+        _skateHandler.TryToUseSkate();
+
     }
 
     //private IEnumerator RotateCharacter(float angle)
@@ -1136,7 +1286,20 @@ public class PlayerMovement : MonoBehaviour
         playerForwardSpeed = value;
 
     }
-
+    public void ResetVelocity()
+    {
+        _rb.velocity = Vector3.zero;
+    }
+    public void ResetPlayer()
+    {
+        playerForwardSpeed = defaultForwardSpeed;
+        _rb.velocity = Vector3.zero;
+        _anim.SetTrigger("ResetGame");
+        print("Player speed resetted");
+        _playerLineState = PlayerLineState.middleLine;
+        _playerPrevLineState = PlayerLineState.middleLine;
+        animationSpeedMultiplier = 1;
+    }
     public PlayerLineState GetPlayerLineState() => _playerLineState;
 
 }

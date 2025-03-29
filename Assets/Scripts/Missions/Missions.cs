@@ -54,30 +54,31 @@ public class Missions : MonoBehaviour
   
 }
 
-[System.Serializable]
-public class Mission
-{
-    public int missionProgress = 0;
-    public int missionCap = 0;
+//[System.Serializable]
+//public class Mission
+//{
+//    public int missionProgress = 0;
+//    public int missionCap = 0;
 
-    public bool isDone;
-    public int rewardX = 1;
+//    public bool isDone;
+//    public int rewardX = 1;
 
-    // skipcost
-    // mission info ui
+//    // skipcost
+//    // mission info ui
     
-    public bool CheckMission()
-    {
-        if(missionProgress == missionCap){
-            isDone=true;
-            return true;
-        }
-        else
-            return false;
-    }
+//    public bool CheckMission()
+//    {
+//        if(missionProgress == missionCap){
+//            isDone=true;
+//            return true;
+//        }
+//        else
+//            return false;
+//    }
 
-    public void AddToMission(){
-        if(isDone) return;
-        missionProgress++;
-    }
-}
+//    public void AddToMission(){
+//        if(isDone) return;
+//        missionProgress++;
+//    }
+//  }
+

@@ -1,11 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class BuyandSelectButton : MonoBehaviour
 {
     public SelectButtons defaultCharacter;
+    public bool isSelectButton = false;
     SelectButtons selectedCharacter;
     private void Start()
     {
@@ -16,6 +18,11 @@ public class BuyandSelectButton : MonoBehaviour
         Actions.onSelectCharacters += SelectedCharacter;
     }
 
+    private void OnDisable()
+    {
+        Actions.onSelectCharacters -= SelectedCharacter;
+
+    }
     private void SelectedCharacter(SelectButtons v)
     {
         selectedCharacter = v;
@@ -27,7 +34,7 @@ public class BuyandSelectButton : MonoBehaviour
         {
             PlayerCollectibleManager.instance.AddCoin(-selectedCharacter.price);
             selectedCharacter.isOwned = true;
-
+            
             selectedCharacter.CheckButtons();
         }
         else
@@ -36,15 +43,20 @@ public class BuyandSelectButton : MonoBehaviour
 
     public void Select()
     {
-
         if (Actions.onSelectButtonPressed != null)
         {
-            Actions.onSelectButtonPressed.Invoke(selectedCharacter.modelRef.transform);
+            Actions.onSelectButtonPressed.Invoke(selectedCharacter);
+            selectedCharacter.CheckButtons();
 
         }
         else
         {
             Debug.LogWarning("onSelectCharacters event is not assigned or has no listeners.");
         }
+    }
+
+    public void SetDefaultCharacther(SelectButtons def)
+    {
+        defaultCharacter = def;
     }
 }
